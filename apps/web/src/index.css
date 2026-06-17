@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "DM Sans", sans-serif;
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  :root {
+    /* FC25 Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    
+    --primary: 216 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 216 15% 94%;
+    --muted-foreground: 216 10% 45%;
+    
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 216 20% 88%;
+    --input: 216 20% 88%;
+    --ring: 216 100% 40%;
+    
+    --radius: 0.75rem;
+
+    /* Mobile Spacing & Touch Targets */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --touch-target-min: 44px;
+
+    /* Pitch Tokens */
+    --pitch-bg: 145 45% 25%;
+    --pitch-lines: 0 0% 100%;
+  }
+
+  .dark {
+    /* FC25 Dark Mode */
+    --background: 220 30% 8%;
+    --foreground: 210 20% 98%;
+    
+    --card: 220 25% 12%;
+    --card-foreground: 210 20% 98%;
+    
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 20% 98%;
+    
+    --primary: 216 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 220 20% 16%;
+    --muted-foreground: 215 15% 65%;
+    
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 216 100% 50%;
+
+    /* Pitch Tokens */
+    --pitch-bg: 145 50% 18%;
+    --pitch-lines: 0 0% 100%;
+  }
+
+  /* Base typography adjustments for mobile */
+  html {
+    font-size: 16px;
+  }
+  @media (max-width: 640px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  /* Ensure touch targets are large enough */
+  button, 
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  .touch-target {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    min-height: var(--touch-target-min);
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+@layer components {
+  /* Pitch Layout */
+  .football-pitch {
+    @apply relative w-full overflow-hidden rounded-xl border-2 md:border-4 border-white/20 shadow-xl;
+    background-color: hsl(var(--pitch-bg));
+    aspect-ratio: 2 / 3;
+    max-height: 800px;
+    margin: 0 auto;
+  }
+
+  .football-pitch::before {
+    content: '';
+    @apply absolute inset-0 opacity-10 pointer-events-none;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 10%, #000 10%, #000 20%);
+  }
+
+  .pitch-line {
+    @apply absolute border-2 pointer-events-none;
+    border-color: hsl(var(--pitch-lines) / 0.4);
+  }
+
+  .pitch-center-line {
+    @apply w-full border-t-2 top-1/2 left-0 -translate-y-1/2;
+  }
+
+  .pitch-center-circle {
+    @apply w-24 h-24 md:w-32 md:h-32 rounded-full border-2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .pitch-penalty-top {
+    @apply w-1/2 h-[15%] border-t-0 top-0 left-1/4;
+  }
+
+  .pitch-penalty-bottom {
+    @apply w-1/2 h-[15%] border-b-0 bottom-0 left-1/4;
+  }
+
+  /* Drag and Drop Utilities */
+  .player-slot {
+    @apply absolute w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-300;
+  }
+
+  .slot-target-active {
+    @apply scale-110 ring-4 ring-primary ring-offset-2 ring-offset-[hsl(var(--pitch-bg))] bg-primary/20 rounded-full;
+  }
+
+  .slot-target-inactive {
+    @apply border-2 border-dashed border-white/30 rounded-full bg-black/20 hover:border-white/60 hover:bg-black/40;
+  }
+
+  .draggable-player {
+    @apply cursor-grab active:cursor-grabbing hover:-translate-y-1 transition-transform duration-200 touch-manipulation;
+  }
+
+  .dragging {
+    @apply opacity-50 scale-95;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.5);
+    border-radius: 4px;
+  }
+
+  .hide-arrows::-webkit-outer-spin-button,
+  .hide-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .hide-arrows[type=number] {
+    -moz-appearance: textfield;
+  }
+}

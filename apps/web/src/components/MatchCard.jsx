@@ -1,0 +1,61 @@
+
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
+
+const MatchCard = ({ match }) => {
+  const matchDate = new Date(match.date);
+  const isPlayed = match.status === 'played';
+  const homeScore = match.homeScore ?? '-';
+  const awayScore = match.awayScore ?? '-';
+
+  const getResultBadge = () => {
+    if (!isPlayed || match.homeScore === null || match.awayScore === null) {
+      return <Badge variant="secondary">À venir</Badge>;
+    }
+    if (match.homeScore > match.awayScore) {
+      return <Badge className="bg-green-600 text-white">Victoire</Badge>;
+    }
+    if (match.homeScore < match.awayScore) {
+      return <Badge variant="destructive">Défaite</Badge>;
+    }
+    return <Badge variant="outline">Nul</Badge>;
+  };
+
+  return (
+    <Card className="bg-card border-border hover:shadow-lg transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="w-4 h-4" />
+            <span>{format(matchDate, 'dd/MM/yyyy')}</span>
+          </div>
+          {getResultBadge()}
+        </div>
+        
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1 text-center">
+            <div className="text-sm font-medium text-muted-foreground mb-1">FILIX</div>
+            <div className="text-4xl font-bold text-primary">{homeScore}</div>
+          </div>
+          <div className="px-4 text-2xl font-bold text-muted-foreground">-</div>
+          <div className="flex-1 text-center">
+            <div className="text-sm font-medium text-muted-foreground mb-1">{match.opponent}</div>
+            <div className="text-4xl font-bold text-accent">{awayScore}</div>
+          </div>
+        </div>
+
+        {match.expand?.competition && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            <span>{match.expand.competition.name}</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default MatchCard;
