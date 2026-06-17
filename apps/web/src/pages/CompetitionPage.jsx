@@ -31,7 +31,7 @@ const CompetitionPage = () => {
         <meta name="description" content="Découvrez toutes nos compétitions, ligues et tournois FC25." />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90 flex flex-col">
+      <div className="min-h-screen bg-transparent flex flex-col">
         <Header />
 
         <main className="flex-1 py-20">

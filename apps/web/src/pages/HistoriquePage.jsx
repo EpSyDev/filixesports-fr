@@ -18,7 +18,7 @@ const HistoriquePage = () => {
         <meta name="description" content="Consultez l'historique complet des matchs du Filix Football Club" />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90">
+      <div className="min-h-screen bg-transparent">
         <Header />
 
         <section className="py-20">

@@ -22,7 +22,7 @@ const MediaPage = () => {
         <meta name="description" content="Galerie photos et vidéos du Filix Football Club" />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90">
+      <div className="min-h-screen bg-transparent">
         <Header />
 
         <section className="py-20">

@@ -18,7 +18,7 @@ const CompositionPage = () => {
         <meta name="description" content="Visualisez la composition tactique de l'équipe FC25 Esport sur le terrain." />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90 flex flex-col">
+      <div className="min-h-screen bg-transparent flex flex-col">
         <Header />
 
         <main className="flex-1 py-12 md:py-20">

@@ -91,7 +91,7 @@ const HomePage = () => {
         <meta name="description" content="Bienvenue sur le site officiel du FC25 Esport. Découvrez notre équipe, nos compétitions et notre palmarès." />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90 flex flex-col">
+      <div className="min-h-screen bg-transparent flex flex-col">
         <Header />
 
         <main className="flex-1">

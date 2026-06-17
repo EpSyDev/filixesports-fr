@@ -35,7 +35,7 @@ const EffectifPage = () => {
         <meta name="description" content="Découvrez l'effectif complet du FC25 Esport avec les statistiques de chaque joueur" />
       </Helmet>
 
-      <div className="min-h-screen bg-background/90">
+      <div className="min-h-screen bg-transparent">
         <Header />
 
         <section className="py-20">
