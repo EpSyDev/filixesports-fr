@@ -34,7 +34,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <img 
-              src="https://horizons-cdn.hostinger.com/892abe82-4853-42bb-bbdc-1574bf12dac9/90be8b6dae9488351c0e480e433e8d0d.png" 
+              src="/logo.png" 
               alt="FC25 Esport Logo" 
               className="h-10 md:h-14 w-auto object-contain"
             />
@@ -107,7 +107,7 @@ const Header = () => {
                 <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <img 
-                    src="https://horizons-cdn.hostinger.com/892abe82-4853-42bb-bbdc-1574bf12dac9/90be8b6dae9488351c0e480e433e8d0d.png" 
+                    src="/logo.png" 
                     alt="FC25 Esport Logo" 
                     className="h-10 w-auto object-contain brightness-0 dark:invert"
                   />

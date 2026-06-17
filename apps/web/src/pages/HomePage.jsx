@@ -113,7 +113,7 @@ const HomePage = () => {
                 className="flex flex-col items-center"
               >
                 <img 
-                  src="https://horizons-cdn.hostinger.com/892abe82-4853-42bb-bbdc-1574bf12dac9/90be8b6dae9488351c0e480e433e8d0d.png" 
+                  src="/logo.png" 
                   alt="FC25 Esport" 
                   className="h-32 md:h-56 lg:h-64 object-contain mb-6 md:mb-8 drop-shadow-2xl"
                 />

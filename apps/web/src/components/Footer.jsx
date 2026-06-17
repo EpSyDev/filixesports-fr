@@ -11,7 +11,7 @@ const Footer = () => {
           <div className="space-y-4 lg:col-span-2">
             <Link to="/" className="inline-block hover:opacity-90 transition-opacity min-h-[44px] flex items-center">
               <img 
-                src="https://horizons-cdn.hostinger.com/892abe82-4853-42bb-bbdc-1574bf12dac9/90be8b6dae9488351c0e480e433e8d0d.png" 
+                src="/logo.png" 
                 alt="FC25 Esport Logo" 
                 className="h-12 md:h-16 w-auto object-contain brightness-0 invert"
               />
