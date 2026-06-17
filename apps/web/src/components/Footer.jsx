@@ -13,7 +13,7 @@ const Footer = () => {
               <img 
                 src="/logo.png" 
                 alt="FC25 Esport Logo" 
-                className="h-12 md:h-16 w-auto object-contain brightness-0 invert"
+                className="h-12 md:h-16 w-auto object-contain"
               />
             </Link>
             <p className="text-sm text-slate-400 max-w-xs">
