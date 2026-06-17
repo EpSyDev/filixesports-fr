@@ -12,17 +12,19 @@ export const useTeamStats = () => {
     setLoading(true);
     setError(null);
     try {
-      const [matchesRes, statsRes] = await Promise.all([
+      const [matchesRes, statsRes, trophiesRes] = await Promise.all([
         supabase.from('matches').select('*').eq('status', 'played').order('date', { ascending: true }),
-        supabase.from('player_stats').select('*')
+        supabase.from('player_stats').select('*'),
+        supabase.from('trophies').select('id', { count: 'exact', head: true })
       ]);
       if (matchesRes.error) throw matchesRes.error;
       if (statsRes.error) throw statsRes.error;
 
       const matches = matchesRes.data;
       const playerStats = statsRes.data;
+      const trophiesCount = trophiesRes.count ?? 0;
 
-      setTeamStats(calculateTeamStats(matches, playerStats));
+      setTeamStats({ ...calculateTeamStats(matches, playerStats), trophiesCount });
       setTrends({
         goals: getTeamGoalTrend(playerStats, matches),
         assists: getTeamAssistTrend(playerStats, matches)

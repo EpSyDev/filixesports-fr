@@ -2,17 +2,14 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  ResponsiveContainer 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
-import { Trophy, HeartHandshake as Handshake, Star, Activity, RefreshCcw, Square, RectangleVertical, Target, ArrowRightLeft, Shield } from 'lucide-react';
-
+import {
+  Activity, CheckCircle, MinusCircle, XCircle,
+  Trophy, Shield, Star, RefreshCcw
+} from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useTeamStats } from '@/hooks/useTeamStats';
@@ -20,6 +17,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const StatCard = ({ title, value, subtitle, icon: Icon, iconColor, valueColor }) => (
+  <Card className="bg-card shadow-sm border-border/50 hover:shadow-md transition-all">
+    <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      <Icon className={`h-5 w-5 ${iconColor}`} />
+    </CardHeader>
+    <CardContent className="px-5 pb-4">
+      <div className={`text-4xl font-bold tracking-tight ${valueColor ?? ''}`}>{value}</div>
+      <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+    </CardContent>
+  </Card>
+);
+
+const EmptyChart = () => (
+  <div className="h-[300px] flex items-center justify-center text-muted-foreground flex-col gap-2">
+    <Activity className="w-8 h-8 opacity-20" />
+    <p className="text-sm">Pas assez de données pour afficher le graphique</p>
+  </div>
+);
 
 const StatsEquipePage = () => {
   const { teamStats, trends, loading, error, refetch } = useTeamStats();
@@ -67,233 +84,72 @@ const StatsEquipePage = () => {
                 Statistiques de l'Équipe
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Analyse détaillée des performances, de la discipline et des tendances de l'équipe Filix tout au long de la saison.
+                Analyse détaillée des performances et des tendances de l'équipe Filix.
               </p>
             </motion.div>
 
             {loading ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  {Array.from({ length: 9 }).map((_, i) => (
-                    <Skeleton key={i} className="h-32 rounded-2xl" />
-                  ))}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <Skeleton className="h-[400px] rounded-2xl" />
-                  <Skeleton className="h-[400px] rounded-2xl" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Skeleton className="h-80 rounded-xl" />
+                  <Skeleton className="h-80 rounded-xl" />
                 </div>
               </>
             ) : teamStats ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                {/* Top Metrics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Matchs Joués</CardTitle>
-                      <Activity className="h-5 w-5 text-primary" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight">{teamStats.matchesPlayed}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Total des rencontres disputées</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total des Buts</CardTitle>
-                      <Trophy className="h-5 w-5 text-accent" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-accent">{teamStats.totalGoals}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Réalisations de l'équipe</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Passes Décisives</CardTitle>
-                      <Handshake className="h-5 w-5 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-blue-500">{teamStats.totalAssists}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Dernières passes avant un but</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total des Tirs</CardTitle>
-                      <Target className="h-5 w-5 text-orange-500" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-orange-500">{teamStats.totalShots}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Tentatives vers le but adverse</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total des Passes</CardTitle>
-                      <ArrowRightLeft className="h-5 w-5 text-emerald-500" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-emerald-500">{teamStats.totalPasses}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Passes réussies dans le jeu</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Total des Tacles</CardTitle>
-                      <Shield className="h-5 w-5 text-indigo-500" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-indigo-500">{teamStats.totalTackles}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Interventions défensives réussies</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Note Moyenne</CardTitle>
-                      <Star className="h-5 w-5 text-yellow-500" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-yellow-500">{teamStats.averageRating}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Sur l'ensemble de l'effectif</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Joueurs Avertis</CardTitle>
-                      <Square className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight">{teamStats.yellowCardCount}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Cartons jaunes uniques</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-card shadow-lg border-border/50 hover:shadow-xl transition-all">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">Joueurs Expulsés</CardTitle>
-                      <RectangleVertical className="h-5 w-5 text-destructive fill-destructive/20" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-4xl font-bold tracking-tight text-destructive">{teamStats.redCardCount}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Cartons rouges uniques</p>
-                    </CardContent>
-                  </Card>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  <StatCard title="Matchs Joués" value={teamStats.matchesPlayed} subtitle="Total des rencontres disputées" icon={Activity} iconColor="text-blue-500" />
+                  <StatCard title="Nombres de victoires" value={teamStats.wins} subtitle="Rencontres gagnées" icon={CheckCircle} iconColor="text-emerald-500" valueColor="text-emerald-500" />
+                  <StatCard title="Nombres de match nul" value={teamStats.draws} subtitle="Scores de parité" icon={MinusCircle} iconColor="text-blue-400" valueColor="text-blue-400" />
+                  <StatCard title="Nombres de défaite" value={teamStats.losses} subtitle="Rencontres perdues" icon={XCircle} iconColor="text-destructive" valueColor="text-destructive" />
                 </div>
 
-                {/* Trends Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <Card className="bg-card border-border/50 shadow-md">
-                    <CardHeader>
-                      <CardTitle className="text-xl">Évolution des Buts</CardTitle>
-                    </CardHeader>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                  <StatCard title="Total des Buts" value={teamStats.goalsScored} subtitle="Réalisations de l'équipe" icon={Trophy} iconColor="text-red-500" valueColor="text-red-500" />
+                  <StatCard title="Buts encaissés" value={teamStats.goalsConceded} subtitle="Buts concédés" icon={Shield} iconColor="text-orange-500" valueColor="text-orange-500" />
+                  <StatCard title="Nombre de trophée remporté" value={teamStats.trophiesCount} subtitle="Titres ajoutés au palmarès" icon={Trophy} iconColor="text-yellow-500" valueColor="text-yellow-500" />
+                  <StatCard title="Note Moyenne" value={teamStats.averageRating} subtitle="Sur l'ensemble de l'effectif" icon={Star} iconColor="text-yellow-400" />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="bg-card border-border/50 shadow-sm">
+                    <CardHeader><CardTitle className="text-lg">Évolution des Buts</CardTitle></CardHeader>
                     <CardContent>
                       {trends.goals.length > 0 ? (
-                        <div className="h-[350px] w-full">
+                        <div className="h-[300px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={trends.goals} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                            <LineChart data={trends.goals} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="opacity-10" vertical={false} />
-                              <XAxis 
-                                dataKey="name" 
-                                stroke="currentColor" 
-                                className="text-xs opacity-50" 
-                                tickLine={false}
-                                axisLine={false}
-                                dy={10}
-                              />
-                              <YAxis 
-                                stroke="currentColor" 
-                                className="text-xs opacity-50" 
-                                tickLine={false}
-                                axisLine={false}
-                                dx={-10}
-                                allowDecimals={false}
-                              />
-                              <RechartsTooltip 
-                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                              />
-                              <Line 
-                                type="monotone" 
-                                dataKey="goals" 
-                                name="Buts" 
-                                stroke="hsl(var(--accent))" 
-                                strokeWidth={3}
-                                dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 4 }}
-                                activeDot={{ r: 6, strokeWidth: 0 }}
-                                animationDuration={1000}
-                              />
+                              <XAxis dataKey="name" stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dy={10} />
+                              <YAxis stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
+                              <Line type="monotone" dataKey="goals" name="Buts" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
-                      ) : (
-                        <div className="h-[350px] flex items-center justify-center text-muted-foreground flex-col gap-2">
-                          <Activity className="w-8 h-8 opacity-20" />
-                          <p>Pas assez de données pour afficher le graphique</p>
-                        </div>
-                      )}
+                      ) : <EmptyChart />}
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-card border-border/50 shadow-md">
-                    <CardHeader>
-                      <CardTitle className="text-xl">Évolution des Passes Décisives</CardTitle>
-                    </CardHeader>
+                  <Card className="bg-card border-border/50 shadow-sm">
+                    <CardHeader><CardTitle className="text-lg">Évolution des Passes Décisives</CardTitle></CardHeader>
                     <CardContent>
                       {trends.assists.length > 0 ? (
-                        <div className="h-[350px] w-full">
+                        <div className="h-[300px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={trends.assists} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                            <LineChart data={trends.assists} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="opacity-10" vertical={false} />
-                              <XAxis 
-                                dataKey="name" 
-                                stroke="currentColor" 
-                                className="text-xs opacity-50" 
-                                tickLine={false}
-                                axisLine={false}
-                                dy={10}
-                              />
-                              <YAxis 
-                                stroke="currentColor" 
-                                className="text-xs opacity-50" 
-                                tickLine={false}
-                                axisLine={false}
-                                dx={-10}
-                                allowDecimals={false}
-                              />
-                              <RechartsTooltip 
-                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                              />
-                              <Line 
-                                type="monotone" 
-                                dataKey="assists" 
-                                name="Passes" 
-                                stroke="#3b82f6" 
-                                strokeWidth={3}
-                                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                                activeDot={{ r: 6, strokeWidth: 0 }}
-                                animationDuration={1000}
-                              />
+                              <XAxis dataKey="name" stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dy={10} />
+                              <YAxis stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
+                              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
+                              <Line type="monotone" dataKey="assists" name="Passes" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
-                      ) : (
-                        <div className="h-[350px] flex items-center justify-center text-muted-foreground flex-col gap-2">
-                          <Activity className="w-8 h-8 opacity-20" />
-                          <p>Pas assez de données pour afficher le graphique</p>
-                        </div>
-                      )}
+                      ) : <EmptyChart />}
                     </CardContent>
                   </Card>
                 </div>
