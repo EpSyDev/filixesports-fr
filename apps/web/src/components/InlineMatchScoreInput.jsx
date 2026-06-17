@@ -68,7 +68,7 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
             onChange={(e) => setHomeScore(e.target.value)}
             onBlur={handleBlur}
             disabled={isSaving || isDeleting}
-            className="w-10 h-8 text-center px-1 py-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent font-semibold text-foreground"
+            className="w-10 h-8 text-center px-1 py-0 border-0 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 bg-transparent font-semibold text-foreground"
             placeholder="-"
           />
           <span className="font-bold text-muted-foreground/40">-</span>
@@ -79,7 +79,7 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
             onChange={(e) => setAwayScore(e.target.value)}
             onBlur={handleBlur}
             disabled={isSaving || isDeleting}
-            className="w-10 h-8 text-center px-1 py-0 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent font-semibold text-foreground"
+            className="w-10 h-8 text-center px-1 py-0 border-0 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 bg-transparent font-semibold text-foreground"
             placeholder="-"
           />
         </div>

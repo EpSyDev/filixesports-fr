@@ -11,9 +11,10 @@ const TrophyCard = ({ trophy }) => {
       <CardContent className="p-0">
         <div className="aspect-square relative overflow-hidden rounded-t-xl bg-muted">
           {imageUrl ? (
-            <img 
-              src={imageUrl} 
+            <img
+              src={imageUrl}
               alt={trophy.name}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           ) : (

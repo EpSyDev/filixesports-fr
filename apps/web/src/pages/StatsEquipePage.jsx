@@ -145,7 +145,7 @@ const StatsEquipePage = () => {
                               <XAxis dataKey="name" stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dy={10} />
                               <YAxis stroke="currentColor" className="text-xs opacity-50" tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
                               <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
-                              <Line type="monotone" dataKey="assists" name="Passes" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                              <Line type="monotone" dataKey="assists" name="Passes" stroke="hsl(216 100% 50%)" strokeWidth={3} dot={{ fill: 'hsl(216 100% 50%)', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>

@@ -10,9 +10,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
           <div className="space-y-4 lg:col-span-2">
             <Link to="/" className="inline-block hover:opacity-90 transition-opacity min-h-[44px] flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="FC25 Esport Logo" 
+              <img
+                src="/logo.png"
+                alt="FC25 Esport Logo"
+                loading="lazy"
                 className="h-12 md:h-16 w-auto object-contain"
               />
             </Link>

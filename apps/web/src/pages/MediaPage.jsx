@@ -71,9 +71,10 @@ const MediaPage = () => {
                         viewport={{ once: true }}
                         className="group relative aspect-video rounded-xl overflow-hidden bg-muted"
                       >
-                        <img 
+                        <img
                           src={item.url}
                           alt={item.title}
+                          loading="lazy"
                           className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-4">

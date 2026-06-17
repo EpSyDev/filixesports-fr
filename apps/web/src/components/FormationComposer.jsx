@@ -196,7 +196,7 @@ const FormationComposer = ({ isReadOnly }) => {
               value={teamName}
               onChange={e => setTeamName(e.target.value)}
               placeholder="Équipe gauche..."
-              className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 outline-none min-w-0"
+              className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-sm min-w-0"
             />
             <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
               <SelectTrigger className="w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
@@ -214,7 +214,7 @@ const FormationComposer = ({ isReadOnly }) => {
               value={opponentName}
               onChange={e => setOpponentName(e.target.value)}
               placeholder="Équipe droite..."
-              className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 outline-none min-w-0"
+              className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400/50 rounded-sm min-w-0"
             />
             <Select value={opponentTactic} onValueChange={setOpponentTactic}>
               <SelectTrigger className="w-28 h-8 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
@@ -228,7 +228,9 @@ const FormationComposer = ({ isReadOnly }) => {
         </div>
 
         {/* Terrain unique — deux équipes face à face */}
-        <div ref={fieldRef} className="w-full rounded-xl overflow-hidden">
+        {/* overflow-x-auto sur mobile : 22 joueurs ne rentrent pas dans 375px */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div ref={fieldRef} className="min-w-[520px] w-full rounded-xl overflow-hidden">
           <FormationField
             composition={composition}
             onPlayerDrop={handlePlayerDrop}
@@ -237,6 +239,7 @@ const FormationComposer = ({ isReadOnly }) => {
             tactic={teamTactic}
             opponentTactic={opponentTactic}
           />
+        </div>
         </div>
 
       </div>

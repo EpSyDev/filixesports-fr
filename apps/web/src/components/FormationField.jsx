@@ -88,7 +88,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
           )}
           <div className="w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-full border-2 border-primary bg-muted overflow-hidden mb-0.5 shadow-sm">
             {player.photo ? (
-              <img src={player.photo} alt={player.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+              <img src={player.photo} alt={player.name} loading="lazy" className="w-full h-full object-cover" crossOrigin="anonymous" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-300">
                 <User className="w-3 h-3 md:w-4 md:h-4" />

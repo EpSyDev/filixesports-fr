@@ -12,9 +12,10 @@ const PlayerCard = ({ player, stats }) => {
       <CardContent className="p-0">
         <div className="aspect-square relative overflow-hidden rounded-t-xl bg-muted">
           {photoUrl ? (
-            <img 
-              src={photoUrl} 
+            <img
+              src={photoUrl}
               alt={player.name}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           ) : (

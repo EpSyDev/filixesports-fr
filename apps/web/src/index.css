@@ -1,17 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: "DM Sans", sans-serif;
+  font-family: "Barlow", sans-serif;
   overflow-x: clip;
   -webkit-tap-highlight-color: transparent;
   background-image: url('/background.png');
   background-attachment: fixed;
   background-size: cover;
   background-position: center top;
+}
+
+/* iOS Safari ne supporte pas background-attachment: fixed */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-attachment: scroll;
+  }
+}
+
+h1, h2, h3 {
+  font-family: "Barlow Condensed", sans-serif;
 }
 
 html {
@@ -218,5 +227,17 @@ html {
   }
   .hide-arrows[type=number] {
     -moz-appearance: textfield;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  body {
+    background-attachment: scroll !important;
   }
 }

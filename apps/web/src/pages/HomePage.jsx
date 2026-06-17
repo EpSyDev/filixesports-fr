@@ -109,9 +109,9 @@ const HomePage = () => {
                   alt="FC25 Esport" 
                   className="h-32 md:h-56 lg:h-64 object-contain mb-6 md:mb-8 drop-shadow-2xl"
                 />
-                <p className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground drop-shadow-md" style={{ letterSpacing: '-0.02em' }}>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground drop-shadow-md" style={{ letterSpacing: '-0.02em' }}>
                   Unité. Passion. Performance
-                </p>
+                </h1>
                 <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
                   Rejoignez-nous dans notre quête d'excellence sur et en dehors du terrain virtuel. Le football, plus qu'un jeu, une véritable compétition.
                 </p>
