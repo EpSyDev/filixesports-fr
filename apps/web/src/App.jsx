@@ -22,7 +22,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="fixed inset-0 -z-10 bg-background/75 pointer-events-none" />
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
