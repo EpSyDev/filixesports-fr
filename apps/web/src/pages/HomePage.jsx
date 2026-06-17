@@ -103,7 +103,7 @@ const HomePage = () => {
               backgroundPosition: 'center'
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-background/80 to-background"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-background/80"></div>
             
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
               <motion.div
