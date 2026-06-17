@@ -98,7 +98,7 @@ const HomePage = () => {
           <section 
             className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
             style={{
-              backgroundImage: 'url(https://images.unsplash.com/photo-1542652694-40abf526446e)',
+              backgroundImage: 'url(/background.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
