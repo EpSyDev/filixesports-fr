@@ -21,6 +21,7 @@ const FormationComposer = ({ isReadOnly }) => {
   const [selectedFormationId, setSelectedFormationId] = useState('new');
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const fieldRef = useRef(null);
 
@@ -59,18 +60,27 @@ const FormationComposer = ({ isReadOnly }) => {
     if (isReadOnly) return;
     e.dataTransfer.setData('application/json', JSON.stringify(player));
     e.currentTarget.classList.add('dragging');
+    setSelectedPlayer(null);
+  };
+
+  const handlePlayerSelect = (player) => {
+    if (isReadOnly) return;
+    setSelectedPlayer(prev => prev?.id === player.id ? null : player);
   };
 
   const handlePlayerDrop = (positionId, droppedPlayer) => {
     if (isReadOnly) return;
+    const playerToPlace = droppedPlayer ?? selectedPlayer;
+    if (!playerToPlace) return;
     setComposition(prev => {
       const newComp = { ...prev };
       for (const [key, player] of Object.entries(newComp)) {
-        if (player && player.id === droppedPlayer.id) newComp[key] = null;
+        if (player && player.id === playerToPlace.id) newComp[key] = null;
       }
-      newComp[positionId] = droppedPlayer;
+      newComp[positionId] = playerToPlace;
       return newComp;
     });
+    setSelectedPlayer(null);
   };
 
   const handlePlayerRemove = (positionId) => {
@@ -81,6 +91,7 @@ const FormationComposer = ({ isReadOnly }) => {
   const resetComposition = () => {
     if (isReadOnly) return;
     setComposition({});
+    setSelectedPlayer(null);
   };
 
   const loadFormation = (formationId, formationsList = formations, playersList = players) => {
@@ -166,40 +177,42 @@ const FormationComposer = ({ isReadOnly }) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start justify-center max-w-6xl mx-auto">
-      <div className="w-full lg:w-2/3 flex flex-col gap-4">
+      <div className="w-full lg:w-2/3 flex flex-col gap-3">
 
-        {/* Barre d'outils */}
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-card p-3 rounded-xl border border-border shadow-sm">
-          <Button onClick={handleDownload} disabled={isDownloading} variant="secondary" className="gap-2 font-medium w-full sm:w-auto min-h-[44px]">
-            <Download className="w-4 h-4" />
-            Télécharger
+        {/* Barre d'outils — toujours en ligne sur mobile */}
+        <div className="flex flex-row items-center gap-2 bg-card p-2 sm:p-3 rounded-xl border border-border shadow-sm">
+          <Button onClick={handleDownload} disabled={isDownloading} variant="secondary" size="sm" className="gap-1.5 flex-1 sm:flex-none min-h-[44px]">
+            <Download className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Télécharger</span>
+            <span className="sm:hidden text-xs">Export</span>
           </Button>
           {!isReadOnly && (
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <Button variant="outline" onClick={resetComposition} className="gap-2 w-full sm:w-auto min-h-[44px]">
-                <RefreshCw className="w-4 h-4" />
-                Vider
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" size="sm" onClick={resetComposition} className="gap-1.5 min-h-[44px]">
+                <RefreshCw className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Vider</span>
               </Button>
-              <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto min-h-[44px]">
-                <Save className="w-4 h-4" />
-                Sauvegarder
+              <Button size="sm" onClick={handleSave} disabled={isSaving} className="gap-1.5 min-h-[44px]">
+                <Save className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Sauvegarder</span>
+                <span className="sm:hidden text-xs">Sauv.</span>
               </Button>
             </div>
           )}
         </div>
 
-        {/* Sélecteurs des deux équipes */}
-        <div className="flex gap-3">
+        {/* Sélecteurs des deux équipes — empilés sur mobile */}
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex flex-1 items-center bg-primary/10 border border-primary/30 rounded-lg px-3 py-2 gap-2">
             <input
               type="text"
               value={teamName}
               onChange={e => setTeamName(e.target.value)}
-              placeholder="Équipe gauche..."
+              placeholder="Équipe bleue..."
               className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-sm min-w-0"
             />
             <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
-              <SelectTrigger className="w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
+              <SelectTrigger className="w-24 sm:w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -213,11 +226,11 @@ const FormationComposer = ({ isReadOnly }) => {
               type="text"
               value={opponentName}
               onChange={e => setOpponentName(e.target.value)}
-              placeholder="Équipe droite..."
+              placeholder="Équipe rouge..."
               className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400/50 rounded-sm min-w-0"
             />
             <Select value={opponentTactic} onValueChange={setOpponentTactic}>
-              <SelectTrigger className="w-28 h-8 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
+              <SelectTrigger className="w-24 sm:w-28 h-8 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -227,20 +240,32 @@ const FormationComposer = ({ isReadOnly }) => {
           </div>
         </div>
 
-        {/* Terrain unique — deux équipes face à face */}
-        {/* overflow-x-auto sur mobile : 22 joueurs ne rentrent pas dans 375px */}
+        {/* Terrain */}
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div ref={fieldRef} className="min-w-[520px] w-full rounded-xl overflow-hidden">
-          <FormationField
-            composition={composition}
-            onPlayerDrop={handlePlayerDrop}
-            onPlayerRemove={handlePlayerRemove}
-            isReadOnly={isReadOnly}
-            tactic={teamTactic}
-            opponentTactic={opponentTactic}
-          />
+          <div ref={fieldRef} className="min-w-[520px] w-full rounded-xl overflow-hidden">
+            <FormationField
+              composition={composition}
+              onPlayerDrop={handlePlayerDrop}
+              onPlayerRemove={handlePlayerRemove}
+              isReadOnly={isReadOnly}
+              tactic={teamTactic}
+              opponentTactic={opponentTactic}
+              selectedPlayer={selectedPlayer}
+            />
+          </div>
         </div>
-        </div>
+
+        {/* Hint tap-to-place sur mobile */}
+        {!isReadOnly && selectedPlayer && (
+          <p className="text-xs text-center text-primary font-medium sm:hidden animate-pulse">
+            Appuie sur un emplacement pour placer {selectedPlayer.name}
+          </p>
+        )}
+        {!isReadOnly && !selectedPlayer && (
+          <p className="text-xs text-center text-muted-foreground sm:hidden">
+            Sur mobile : sélectionne un joueur puis appuie sur un emplacement
+          </p>
+        )}
 
       </div>
 
@@ -250,6 +275,8 @@ const FormationComposer = ({ isReadOnly }) => {
             players={players}
             availablePlayerIds={availablePlayerIds}
             onDragStart={handleDragStart}
+            selectedPlayer={selectedPlayer}
+            onPlayerSelect={handlePlayerSelect}
           />
         </div>
       )}

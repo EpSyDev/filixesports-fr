@@ -21,13 +21,13 @@ const HistoriquePage = () => {
       <div className="min-h-screen bg-transparent">
         <Header />
 
-        <section className="py-20">
+        <section className="py-10 md:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-center mb-12"
+              className="text-center mb-6 md:mb-12"
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
                 Historique des Matchs

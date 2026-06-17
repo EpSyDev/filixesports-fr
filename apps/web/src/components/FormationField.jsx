@@ -61,7 +61,8 @@ const FORMATIONS = {
 
 export const TACTIC_OPTIONS = ['3-5-2', '4-3-3', '3-1-4-2', '3-4-3'];
 
-const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly, isOpponent }) => {
+const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly, isOpponent, selectedPlayer, onSlotTap }) => {
+  const isTapTarget = !isReadOnly && !isOpponent && selectedPlayer && !player;
   return (
     <div
       className={cn(
@@ -69,12 +70,14 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
         isActive && !isReadOnly ? "slot-target-active" : "slot-target-inactive",
         player ? "bg-black/60 border-primary ring-0" : "",
         isOpponent ? "border-red-400/30 hover:border-red-400/60" : "",
-        isReadOnly ? "cursor-default" : ""
+        isReadOnly ? "cursor-default" : "",
+        isTapTarget ? "ring-2 ring-primary/70 ring-offset-1 ring-offset-transparent animate-pulse cursor-pointer" : ""
       )}
       style={{ top: position.top, left: position.left }}
       onDragOver={!isReadOnly ? (e) => onDragOver(e, position.id) : undefined}
       onDragLeave={!isReadOnly ? onDragLeave : undefined}
       onDrop={!isReadOnly ? (e) => onDrop(e, position.id) : undefined}
+      onClick={!isReadOnly && !isOpponent && selectedPlayer ? () => onSlotTap(position.id) : undefined}
     >
       {player ? (
         <div className="relative flex flex-col items-center justify-center w-full h-full">
@@ -111,7 +114,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
   );
 };
 
-const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2', opponentTactic = '4-3-3' }) => {
+const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2', opponentTactic = '4-3-3', selectedPlayer }) => {
   const [activeSlot, setActiveSlot] = useState(null);
 
   const positions = FORMATIONS[tactic] || FORMATIONS['3-5-2'];
@@ -149,6 +152,11 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
     }
   };
 
+  const handleSlotTap = (positionId) => {
+    if (isReadOnly || !selectedPlayer) return;
+    onPlayerDrop(positionId, selectedPlayer);
+  };
+
   return (
     <div className="football-pitch">
       <div className="pitch-line pitch-center-line z-0" />
@@ -169,6 +177,8 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
           onRemove={onPlayerRemove}
           isReadOnly={isReadOnly}
           isOpponent={false}
+          selectedPlayer={selectedPlayer}
+          onSlotTap={handleSlotTap}
         />
       ))}
 

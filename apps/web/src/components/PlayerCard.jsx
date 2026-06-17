@@ -28,7 +28,7 @@ const PlayerCard = ({ player, stats }) => {
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold text-lg mb-1 truncate">{player.name}</h3>
+          <h3 className="font-bold text-sm sm:text-lg mb-1 truncate">{player.name}</h3>
           
           <div className="flex items-center gap-2 mb-4">
             <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded bg-primary text-primary-foreground">

@@ -12,18 +12,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const COLUMNS = [
-  { key: 'number',       label: '#',          align: 'left'   },
-  { key: 'name',         label: 'Joueur',     align: 'left'   },
-  { key: 'position',     label: 'Poste',      align: 'left'   },
-  { key: 'totalMatches', label: 'MJ',         align: 'center' },
-  { key: 'totalGoals',   label: 'Buts',       align: 'center' },
-  { key: 'totalAssists', label: 'Passes D.',  align: 'center' },
-  { key: 'totalShots',   label: 'Tirs',       align: 'center' },
-  { key: 'totalPasses',  label: 'Passes',     align: 'center' },
-  { key: 'totalTackles', label: 'Tacles',     align: 'center' },
-  { key: 'averageRating',label: 'Note',       align: 'center' },
-  { key: 'yellowCards',  label: 'CJ',         align: 'center' },
-  { key: 'redCards',     label: 'CR',         align: 'center' },
+  { key: 'number',        label: '#',         align: 'left',   hide: '' },
+  { key: 'name',          label: 'Joueur',    align: 'left',   hide: '' },
+  { key: 'position',      label: 'Poste',     align: 'left',   hide: 'hidden sm:table-cell' },
+  { key: 'totalMatches',  label: 'MJ',        align: 'center', hide: 'hidden md:table-cell' },
+  { key: 'totalGoals',    label: 'Buts',      align: 'center', hide: '' },
+  { key: 'totalAssists',  label: 'Passes D.', align: 'center', hide: 'hidden sm:table-cell' },
+  { key: 'totalShots',    label: 'Tirs',      align: 'center', hide: 'hidden lg:table-cell' },
+  { key: 'totalPasses',   label: 'Passes',    align: 'center', hide: 'hidden lg:table-cell' },
+  { key: 'totalTackles',  label: 'Tacles',    align: 'center', hide: 'hidden lg:table-cell' },
+  { key: 'averageRating', label: 'Note',      align: 'center', hide: '' },
+  { key: 'yellowCards',   label: 'CJ',        align: 'center', hide: 'hidden md:table-cell' },
+  { key: 'redCards',      label: 'CR',        align: 'center', hide: 'hidden md:table-cell' },
 ];
 
 const SortIcon = ({ col, sortKey, sortDir }) => {
@@ -71,13 +71,13 @@ const StatsJoueursPage = () => {
       <div className="min-h-screen bg-transparent">
         <Header />
 
-        <section className="py-20">
+        <section className="py-10 md:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-center mb-12"
+              className="text-center mb-6 md:mb-12"
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
                 Statistiques des Joueurs
@@ -100,7 +100,7 @@ const StatsJoueursPage = () => {
                         <TableHead
                           key={col.key}
                           onClick={() => handleSort(col.key)}
-                          className={`cursor-pointer select-none whitespace-nowrap hover:text-foreground transition-colors ${col.align === 'center' ? 'text-center' : ''}`}
+                          className={`cursor-pointer select-none whitespace-nowrap hover:text-foreground transition-colors ${col.align === 'center' ? 'text-center' : ''} ${col.hide}`}
                         >
                           {col.label}
                           <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
@@ -113,18 +113,18 @@ const StatsJoueursPage = () => {
                       <TableRow key={player.id} className="hover:bg-muted/40 transition-colors">
                         <TableCell className="font-bold">{player.number}</TableCell>
                         <TableCell className="font-medium whitespace-nowrap">{player.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{player.position}</TableCell>
-                        <TableCell className="text-center">{player.totalMatches}</TableCell>
+                        <TableCell className="text-muted-foreground hidden sm:table-cell">{player.position}</TableCell>
+                        <TableCell className="text-center hidden md:table-cell">{player.totalMatches}</TableCell>
                         <TableCell className="text-center font-bold text-primary">{player.totalGoals}</TableCell>
-                        <TableCell className="text-center font-bold text-accent">{player.totalAssists}</TableCell>
-                        <TableCell className="text-center">{player.totalShots}</TableCell>
-                        <TableCell className="text-center">{player.totalPasses}</TableCell>
-                        <TableCell className="text-center">{player.totalTackles}</TableCell>
+                        <TableCell className="text-center font-bold text-accent hidden sm:table-cell">{player.totalAssists}</TableCell>
+                        <TableCell className="text-center hidden lg:table-cell">{player.totalShots}</TableCell>
+                        <TableCell className="text-center hidden lg:table-cell">{player.totalPasses}</TableCell>
+                        <TableCell className="text-center hidden lg:table-cell">{player.totalTackles}</TableCell>
                         <TableCell className="text-center font-bold text-yellow-500">
                           {player.averageRating > 0 ? player.averageRating.toFixed(1) : '-'}
                         </TableCell>
-                        <TableCell className="text-center">{player.yellowCards}</TableCell>
-                        <TableCell className="text-center">{player.redCards}</TableCell>
+                        <TableCell className="text-center hidden md:table-cell">{player.yellowCards}</TableCell>
+                        <TableCell className="text-center hidden md:table-cell">{player.redCards}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

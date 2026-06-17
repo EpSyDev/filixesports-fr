@@ -38,7 +38,7 @@ const EffectifPage = () => {
       <div className="min-h-screen bg-transparent">
         <Header />
 
-        <section className="py-20">
+        <section className="py-10 md:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div initial={{
             opacity: 0,
@@ -48,7 +48,7 @@ const EffectifPage = () => {
             y: 0
           }} transition={{
             duration: 0.5
-          }} className="text-center mb-16">
+          }} className="text-center mb-8 md:mb-16">
               <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground" style={{
               letterSpacing: '-0.02em'
             }}>
@@ -60,7 +60,7 @@ const EffectifPage = () => {
             </motion.div>
 
             {playersLoading || statsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="space-y-3">
                     <Skeleton className="aspect-square rounded-2xl" />
@@ -73,15 +73,15 @@ const EffectifPage = () => {
               const groupPlayers = players.filter(p => codes.includes(p.position));
               if (groupPlayers.length === 0) return null;
               return (
-                <div key={label} className="mb-16">
-                  <div className="flex items-center gap-4 mb-8">
-                    <h2 className="text-3xl font-extrabold text-foreground">{label}</h2>
+                <div key={label} className="mb-8 md:mb-16">
+                  <div className="flex items-center gap-4 mb-4 md:mb-8">
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">{label}</h2>
                     <Badge variant="secondary" className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1">
                       {groupPlayers.length}
                     </Badge>
                     <div className="flex-1 h-px bg-border"></div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                     {groupPlayers.map((player, index) => (
                       <motion.div key={player.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }}>
                         <PlayerCard player={player} stats={getPlayerStats(player.id)} />

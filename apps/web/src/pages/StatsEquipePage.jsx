@@ -72,7 +72,7 @@ const StatsEquipePage = () => {
       <div className="min-h-screen bg-transparent">
         <Header />
 
-        <section className="py-20 lg:py-24">
+        <section className="py-10 md:py-20 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
