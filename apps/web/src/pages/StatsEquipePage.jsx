@@ -69,7 +69,7 @@ const StatsEquipePage = () => {
         <meta name="description" content="Consultez les statistiques globales et détaillées de l'équipe Filix" />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background/90">
         <Header />
 
         <section className="py-20 lg:py-24">

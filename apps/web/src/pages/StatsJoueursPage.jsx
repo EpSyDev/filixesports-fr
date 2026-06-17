@@ -68,7 +68,7 @@ const StatsJoueursPage = () => {
         <meta name="description" content="Consultez les statistiques détaillées de tous les joueurs du Filix Football Club" />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background/90">
         <Header />
 
         <section className="py-20">

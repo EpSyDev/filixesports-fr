@@ -8,6 +8,10 @@ body {
   font-family: "DM Sans", sans-serif;
   overflow-x: clip;
   -webkit-tap-highlight-color: transparent;
+  background-image: url('/background.png');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center top;
 }
 
 html {

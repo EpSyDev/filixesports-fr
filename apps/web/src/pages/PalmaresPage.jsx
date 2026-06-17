@@ -18,7 +18,7 @@ const PalmaresPage = () => {
         <meta name="description" content="Découvrez tous les trophées et titres remportés par le Filix Football Club" />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background/90">
         <Header />
 
         <section className="py-20">

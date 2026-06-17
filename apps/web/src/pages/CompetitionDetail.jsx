@@ -97,7 +97,7 @@ const CompetitionDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background/90">
         <Header />
         <div className="max-w-7xl mx-auto px-4 py-20 space-y-8">
           <Skeleton className="h-32 w-full rounded-2xl" />
@@ -116,7 +116,7 @@ const CompetitionDetail = () => {
   return (
     <>
       <Helmet><title>{`${competition.name} - Filix`}</title></Helmet>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background/90 flex flex-col">
         <Header />
         <main className="flex-1 py-12 lg:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

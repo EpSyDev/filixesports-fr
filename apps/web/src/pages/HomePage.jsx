@@ -91,19 +91,12 @@ const HomePage = () => {
         <meta name="description" content="Bienvenue sur le site officiel du FC25 Esport. Découvrez notre équipe, nos compétitions et notre palmarès." />
       </Helmet>
 
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background/90 flex flex-col">
         <Header />
 
         <main className="flex-1">
-          <section 
-            className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
-            style={{
-              backgroundImage: 'url(/background.png)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-background/80"></div>
+          <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background/90"></div>
             
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
               <motion.div
