@@ -82,6 +82,7 @@ create table public.media (
 create table public.formations (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
+  tactic text default '3-5-2',
   players jsonb default '[]',
   created_at timestamptz default now()
 );

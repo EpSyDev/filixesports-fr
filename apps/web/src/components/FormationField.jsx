@@ -3,33 +3,66 @@ import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Layout configuration for 3-5-2 with aligned MDCs
-const PITCH_POSITIONS = [
-  { id: 'ATG', label: 'ATG', bottom: '85%', left: '35%' },
-  { id: 'ATD', label: 'ATD', bottom: '85%', left: '65%' },
-  { id: 'MOC', label: 'MOC', bottom: '70%', left: '50%' },
-  { id: 'MG', label: 'MG', bottom: '50%', left: '15%' },
-  { id: 'MDC', label: 'MDC', bottom: '35%', left: '40%' },   // Left MDC
-  { id: 'MDC2', label: 'MDC', bottom: '35%', left: '60%' },  // Right MDC
-  { id: 'MD', label: 'MD', bottom: '50%', left: '85%' },
-  { id: 'DCG', label: 'DCG', bottom: '20%', left: '25%' },
-  { id: 'DC', label: 'DC', bottom: '15%', left: '50%' },
-  { id: 'DCD', label: 'DCD', bottom: '20%', left: '75%' },
-  { id: 'GK', label: 'GK', bottom: '5%', left: '50%' },
-];
+const FORMATIONS = {
+  '3-5-2': [
+    { id: 'ATG',  label: 'ATG', bottom: '85%', left: '35%' },
+    { id: 'ATD',  label: 'ATD', bottom: '85%', left: '65%' },
+    { id: 'MOC',  label: 'MOC', bottom: '70%', left: '50%' },
+    { id: 'MG',   label: 'MG',  bottom: '55%', left: '12%' },
+    { id: 'MDC',  label: 'MDC', bottom: '50%', left: '38%' },
+    { id: 'MDC2', label: 'MDC', bottom: '50%', left: '62%' },
+    { id: 'MD',   label: 'MD',  bottom: '55%', left: '88%' },
+    { id: 'DCG',  label: 'DCG', bottom: '22%', left: '25%' },
+    { id: 'DC',   label: 'DC',  bottom: '17%', left: '50%' },
+    { id: 'DCD',  label: 'DCD', bottom: '22%', left: '75%' },
+    { id: 'GK',   label: 'GK',  bottom: '5%',  left: '50%' },
+  ],
+  '4-3-3': [
+    { id: 'ATG',  label: 'ATG', bottom: '85%', left: '18%' },
+    { id: 'AT',   label: 'AT',  bottom: '85%', left: '50%' },
+    { id: 'ATD',  label: 'ATD', bottom: '85%', left: '82%' },
+    { id: 'MG',   label: 'MG',  bottom: '58%', left: '22%' },
+    { id: 'MC',   label: 'MC',  bottom: '58%', left: '50%' },
+    { id: 'MD',   label: 'MD',  bottom: '58%', left: '78%' },
+    { id: 'DG',   label: 'DG',  bottom: '25%', left: '12%' },
+    { id: 'DCG',  label: 'DCG', bottom: '20%', left: '37%' },
+    { id: 'DCD',  label: 'DCD', bottom: '20%', left: '63%' },
+    { id: 'DD',   label: 'DD',  bottom: '25%', left: '88%' },
+    { id: 'GK',   label: 'GK',  bottom: '5%',  left: '50%' },
+  ],
+  '3-1-4-2': [
+    { id: 'ATG',  label: 'ATG', bottom: '85%', left: '35%' },
+    { id: 'ATD',  label: 'ATD', bottom: '85%', left: '65%' },
+    { id: 'MG',   label: 'MG',  bottom: '65%', left: '12%' },
+    { id: 'MC',   label: 'MC',  bottom: '65%', left: '37%' },
+    { id: 'MC2',  label: 'MC',  bottom: '65%', left: '63%' },
+    { id: 'MD',   label: 'MD',  bottom: '65%', left: '88%' },
+    { id: 'MDC',  label: 'MDC', bottom: '45%', left: '50%' },
+    { id: 'DCG',  label: 'DCG', bottom: '22%', left: '25%' },
+    { id: 'DC',   label: 'DC',  bottom: '17%', left: '50%' },
+    { id: 'DCD',  label: 'DCD', bottom: '22%', left: '75%' },
+    { id: 'GK',   label: 'GK',  bottom: '5%',  left: '50%' },
+  ],
+  '3-4-3': [
+    { id: 'ATG',  label: 'ATG', bottom: '85%', left: '18%' },
+    { id: 'AT',   label: 'AT',  bottom: '85%', left: '50%' },
+    { id: 'ATD',  label: 'ATD', bottom: '85%', left: '82%' },
+    { id: 'MG',   label: 'MG',  bottom: '55%', left: '12%' },
+    { id: 'MDC',  label: 'MDC', bottom: '52%', left: '37%' },
+    { id: 'MOC',  label: 'MOC', bottom: '52%', left: '63%' },
+    { id: 'MD',   label: 'MD',  bottom: '55%', left: '88%' },
+    { id: 'DCG',  label: 'DCG', bottom: '22%', left: '25%' },
+    { id: 'DC',   label: 'DC',  bottom: '17%', left: '50%' },
+    { id: 'DCD',  label: 'DCD', bottom: '22%', left: '75%' },
+    { id: 'GK',   label: 'GK',  bottom: '5%',  left: '50%' },
+  ],
+};
 
-const PlayerSlot = ({ 
-  position, 
-  player, 
-  onDrop, 
-  onDragOver, 
-  onDragLeave, 
-  onRemove,
-  isActive,
-  isReadOnly
-}) => {
+export const TACTIC_OPTIONS = ['3-5-2', '4-3-3', '3-1-4-2', '3-4-3'];
+
+const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly }) => {
   return (
-    <div 
+    <div
       className={cn(
         "player-slot group z-10",
         isActive && !isReadOnly ? "slot-target-active" : "slot-target-inactive",
@@ -44,26 +77,16 @@ const PlayerSlot = ({
       {player ? (
         <div className="relative flex flex-col items-center justify-center w-full h-full">
           {!isReadOnly && (
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(position.id);
-              }}
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(position.id); }}
               className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 md:p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 shadow-md min-h-[32px] min-w-[32px] flex items-center justify-center"
-              aria-label="Remove player"
             >
               <X className="w-4 h-4 md:w-3 md:h-3" />
             </button>
           )}
-          
           <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-2 border-primary bg-muted overflow-hidden mb-1 shadow-sm">
             {player.photo ? (
-              <img 
-                src={player.photo} 
-                alt={player.name}
-                className="w-full h-full object-cover"
-                crossOrigin="anonymous"
-              />
+              <img src={player.photo} alt={player.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-300">
                 <User className="w-4 h-4 md:w-5 md:h-5" />
@@ -86,8 +109,9 @@ const PlayerSlot = ({
   );
 };
 
-const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly }) => {
+const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2' }) => {
   const [activeSlot, setActiveSlot] = useState(null);
+  const positions = FORMATIONS[tactic] || FORMATIONS['3-5-2'];
 
   const handleDragOver = (e, positionId) => {
     if (isReadOnly) return;
@@ -117,14 +141,11 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly 
 
   return (
     <div className="football-pitch">
-      {/* Pitch Lines */}
       <div className="pitch-line pitch-center-line z-0" />
       <div className="pitch-line pitch-center-circle z-0" />
       <div className="pitch-line pitch-penalty-top z-0" />
       <div className="pitch-line pitch-penalty-bottom z-0" />
-      
-      {/* Player Slots */}
-      {PITCH_POSITIONS.map((pos) => (
+      {positions.map((pos) => (
         <PlayerSlot
           key={pos.id}
           position={pos}

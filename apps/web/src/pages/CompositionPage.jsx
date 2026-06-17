@@ -14,7 +14,7 @@ const CompositionPage = () => {
   return (
     <>
       <Helmet>
-        <title>Composition 3-5-2 - FC25 Esport</title>
+        <title>Composition tactique - FC25 Esport</title>
         <meta name="description" content="Visualisez la composition tactique de l'équipe FC25 Esport sur le terrain." />
       </Helmet>
 
@@ -30,10 +30,10 @@ const CompositionPage = () => {
               className="text-center mb-8"
             >
               <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-foreground tracking-tight">
-                Formation 3-5-2
+                Tableau tactique
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-                Le dispositif tactique de notre équipe.
+                Choisissez la formation de chaque équipe et placez vos joueurs.
               </p>
             </motion.div>
 
