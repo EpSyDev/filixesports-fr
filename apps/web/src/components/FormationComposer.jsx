@@ -14,7 +14,9 @@ const FormationComposer = ({ isReadOnly }) => {
   const [formations, setFormations] = useState([]);
 
   const [teamTactic, setTeamTactic] = useState('3-5-2');
+  const [teamName, setTeamName] = useState('');
   const [opponentTactic, setOpponentTactic] = useState('4-3-3');
+  const [opponentName, setOpponentName] = useState('');
   const [composition, setComposition] = useState({});
   const [selectedFormationId, setSelectedFormationId] = useState('new');
   const [isSaving, setIsSaving] = useState(false);
@@ -187,10 +189,16 @@ const FormationComposer = ({ isReadOnly }) => {
         </div>
 
         {/* Équipe adverse */}
-        <div className="flex items-center justify-between bg-red-950/40 border border-red-900/40 rounded-lg px-4 py-2">
-          <span className="text-sm font-bold text-red-300">Adversaire</span>
+        <div className="flex items-center justify-between bg-red-950/40 border border-red-900/40 rounded-lg px-4 py-2 gap-3">
+          <input
+            type="text"
+            value={opponentName}
+            onChange={e => setOpponentName(e.target.value)}
+            placeholder="Nom de l'équipe..."
+            className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 outline-none min-w-0"
+          />
           <Select value={opponentTactic} onValueChange={setOpponentTactic}>
-            <SelectTrigger className="w-32 h-9 bg-red-950/60 border-red-800/60 text-red-200 text-sm">
+            <SelectTrigger className="w-32 h-9 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -214,10 +222,16 @@ const FormationComposer = ({ isReadOnly }) => {
         </div>
 
         {/* Notre équipe */}
-        <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-4 py-2">
-          <span className="text-sm font-bold text-primary">Notre équipe</span>
+        <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-4 py-2 gap-3">
+          <input
+            type="text"
+            value={teamName}
+            onChange={e => setTeamName(e.target.value)}
+            placeholder="Nom de l'équipe..."
+            className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 outline-none min-w-0"
+          />
           <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
-            <SelectTrigger className="w-32 h-9 bg-primary/10 border-primary/30 text-primary text-sm">
+            <SelectTrigger className="w-32 h-9 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
