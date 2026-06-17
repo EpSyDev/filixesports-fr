@@ -22,10 +22,16 @@ const EffectifPage = () => {
     const stats = playerStats.filter(s => s.playerId === playerId);
     return calculatePlayerStats(stats);
   };
-  const positions = ['Gardien', 'Défenseur', 'Milieu', 'Attaquant'];
+  const POSITION_GROUPS = [
+    { label: 'Gardiens',   codes: ['GB'] },
+    { label: 'Défenseurs', codes: ['DC', 'DCG', 'DCD', 'DG', 'DD', 'DEF'] },
+    { label: 'Milieux',    codes: ['MDC', 'MOC', 'MG', 'MD', 'MC', 'MIL'] },
+    { label: 'Attaquants', codes: ['BU', 'ATG', 'ATD', 'AT', 'ATT'] },
+  ];
+
   return <>
       <Helmet>
-        <title>Effectif - FC25 Esport</title>
+        <title>Effectif - Filix Esports</title>
         <meta name="description" content="Découvrez l'effectif complet du FC25 Esport avec les statistiques de chaque joueur" />
       </Helmet>
 
@@ -53,44 +59,38 @@ const EffectifPage = () => {
               </p>
             </motion.div>
 
-            {playersLoading || statsLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {Array.from({
-              length: 8
-            }).map((_, i) => <div key={i} className="space-y-3">
+            {playersLoading || statsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
                     <Skeleton className="aspect-square rounded-2xl" />
                     <Skeleton className="h-6 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
-                  </div>)}
-              </div> : positions.map((position, posIndex) => {
-            const positionPlayers = players.filter(p => p.position === position);
-            if (positionPlayers.length === 0) return null;
-            return <div key={position} className="mb-16">
-                    <div className="flex items-center gap-4 mb-8">
-                      <h2 className="text-3xl font-extrabold text-foreground">{position}s</h2>
-                      <Badge variant="secondary" className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1">
-                        {positionPlayers.length}
-                      </Badge>
-                      <div className="flex-1 h-px bg-border"></div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                      {positionPlayers.map((player, index) => <motion.div key={player.id} initial={{
-                  opacity: 0,
-                  y: 20
-                }} whileInView={{
-                  opacity: 1,
-                  y: 0
-                }} transition={{
-                  duration: 0.5,
-                  delay: index * 0.1
-                }} viewport={{
-                  once: true
-                }}>
-                          <PlayerCard player={player} stats={getPlayerStats(player.id)} />
-                        </motion.div>)}
-                    </div>
-                  </div>;
-          })}
+                  </div>
+                ))}
+              </div>
+            ) : POSITION_GROUPS.map(({ label, codes }) => {
+              const groupPlayers = players.filter(p => codes.includes(p.position));
+              if (groupPlayers.length === 0) return null;
+              return (
+                <div key={label} className="mb-16">
+                  <div className="flex items-center gap-4 mb-8">
+                    <h2 className="text-3xl font-extrabold text-foreground">{label}</h2>
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1">
+                      {groupPlayers.length}
+                    </Badge>
+                    <div className="flex-1 h-px bg-border"></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {groupPlayers.map((player, index) => (
+                      <motion.div key={player.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} viewport={{ once: true }}>
+                        <PlayerCard player={player} stats={getPlayerStats(player.id)} />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
