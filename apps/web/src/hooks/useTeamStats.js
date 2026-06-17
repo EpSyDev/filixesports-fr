@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { calculateTeamStats, getTeamGoalTrend, getTeamAssistTrend } from '@/utils/stats-aggregation';
 
 export const useTeamStats = () => {
@@ -13,46 +12,29 @@ export const useTeamStats = () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch played matches
-      const matchesRes = await pb.collection('matches').getList(1, 500, {
-        filter: 'status="played"',
-        sort: 'date',
-        $autoCancel: false
-      });
-      
-      // 2. Fetch all player stats linked to matches
-      const statsRes = await pb.collection('player_stats').getList(1, 5000, {
-        expand: 'playerId,matchId',
-        $autoCancel: false
-      });
+      const [matchesRes, statsRes] = await Promise.all([
+        supabase.from('matches').select('*').eq('status', 'played').order('date', { ascending: true }),
+        supabase.from('player_stats').select('*')
+      ]);
+      if (matchesRes.error) throw matchesRes.error;
+      if (statsRes.error) throw statsRes.error;
 
-      const matches = matchesRes.items;
-      const playerStats = statsRes.items;
+      const matches = matchesRes.data;
+      const playerStats = statsRes.data;
 
-      // 3. Aggregate totals and trends
       setTeamStats(calculateTeamStats(matches, playerStats));
       setTrends({
         goals: getTeamGoalTrend(playerStats, matches),
         assists: getTeamAssistTrend(playerStats, matches)
       });
-      
     } catch (err) {
-      console.error('Error fetching team stats:', err);
-      setError(err.message || 'Une erreur est survenue lors de la récupération des statistiques');
+      setError(err.message || 'Erreur lors de la récupération des statistiques');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  return {
-    teamStats,
-    trends,
-    loading,
-    error,
-    refetch: fetchStats
-  };
+  return { teamStats, trends, loading, error, refetch: fetchStats };
 };

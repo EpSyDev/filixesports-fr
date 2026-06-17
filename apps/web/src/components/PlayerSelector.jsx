@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Search, User } from 'lucide-react';
-import pb from '@/lib/pocketbaseClient';
 import { cn } from '@/lib/utils';
 
 const PlayerSelector = ({ players, availablePlayerIds, onDragStart }) => {
@@ -50,7 +49,7 @@ const PlayerSelector = ({ players, availablePlayerIds, onDragStart }) => {
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-border">
                 {player.photo ? (
                   <img 
-                    src={pb.files.getUrl(player, player.photo)} 
+                    src={player.photo} 
                     alt={player.name}
                     className="w-full h-full object-cover"
                   />

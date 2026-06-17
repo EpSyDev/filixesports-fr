@@ -3,7 +3,6 @@
 -- À exécuter dans SQL Editor > New query
 -- ============================================================
 
--- Extensions
 create extension if not exists "uuid-ossp";
 
 -- ============================================================
@@ -16,7 +15,17 @@ create table public.players (
   number integer not null,
   position text not null,
   "secondaryPosition" text default '',
-  avatar text default '',
+  created_at timestamptz default now()
+);
+
+create table public.competitions (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  type text not null default 'LIGUE',
+  season text default '',
+  status text default 'draft',
+  description text default '',
+  locked boolean default false,
   created_at timestamptz default now()
 );
 
@@ -26,7 +35,7 @@ create table public.matches (
   opponent text not null,
   "homeScore" integer,
   "awayScore" integer,
-  competition uuid,
+  competition uuid references public.competitions(id) on delete set null,
   formation text default '',
   status text not null default 'scheduled',
   notes text default '',
@@ -45,23 +54,10 @@ create table public.player_stats (
   rating numeric(3,1),
   "yellowCards" integer default 0,
   "redCards" integer default 0,
+  notes text default '',
   created_at timestamptz default now(),
   unique("playerId", "matchId")
 );
-
-create table public.competitions (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null,
-  type text not null default 'tournament',
-  status text default 'active',
-  locked boolean default false,
-  created_at timestamptz default now()
-);
-
--- FK matches -> competitions (après création competitions)
-alter table public.matches
-  add constraint matches_competition_fkey
-  foreign key (competition) references public.competitions(id) on delete set null;
 
 create table public.trophies (
   id uuid primary key default uuid_generate_v4(),
@@ -86,18 +82,16 @@ create table public.media (
 create table public.formations (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
-  formation text not null,
-  positions jsonb default '[]',
+  players jsonb default '[]',
   created_at timestamptz default now()
 );
 
--- ---- Compétitions : League ----
+-- ---- Ligue ----
 
 create table public.league_teams (
   id uuid primary key default uuid_generate_v4(),
   "competitionId" uuid not null references public.competitions(id) on delete cascade,
-  name text not null,
-  logo text default '',
+  "teamName" text not null,
   "isOurTeam" boolean default false,
   created_at timestamptz default now()
 );
@@ -117,7 +111,7 @@ create table public.league_matches (
 create table public.league_standings (
   id uuid primary key default uuid_generate_v4(),
   "competitionId" uuid not null references public.competitions(id) on delete cascade,
-  team text not null,
+  "teamName" text not null,
   played integer default 0,
   won integer default 0,
   drawn integer default 0,
@@ -129,13 +123,12 @@ create table public.league_standings (
   created_at timestamptz default now()
 );
 
--- ---- Compétitions : Tournament (poules + élimination) ----
+-- ---- Tournoi (poules + élimination) ----
 
 create table public.tournament_teams (
   id uuid primary key default uuid_generate_v4(),
   "competitionId" uuid not null references public.competitions(id) on delete cascade,
-  name text not null,
-  logo text default '',
+  "teamName" text not null,
   "isOurTeam" boolean default false,
   "poolId" text default '',
   created_at timestamptz default now()
@@ -165,7 +158,7 @@ create table public.pool_standings (
   id uuid primary key default uuid_generate_v4(),
   "competitionId" uuid not null references public.competitions(id) on delete cascade,
   "poolId" text not null,
-  team text not null,
+  "teamName" text not null,
   played integer default 0,
   won integer default 0,
   drawn integer default 0,
@@ -174,6 +167,7 @@ create table public.pool_standings (
   "goalsAgainst" integer default 0,
   points integer default 0,
   rank integer default 0,
+  qualified boolean default false,
   created_at timestamptz default now()
 );
 
@@ -186,78 +180,51 @@ create table public.knockout_matches (
   "awayTeam" text default '',
   "homeScore" integer,
   "awayScore" integer,
+  winner text default '',
   status text default 'scheduled',
   "nextMatchId" uuid,
   created_at timestamptz default now()
 );
 
 -- ============================================================
--- RLS (Row Level Security)
--- Lecture publique, écriture authentifiée uniquement
+-- RLS — lecture publique, écriture authentifiée
 -- ============================================================
 
-alter table public.players enable row level security;
-alter table public.matches enable row level security;
-alter table public.player_stats enable row level security;
-alter table public.competitions enable row level security;
-alter table public.trophies enable row level security;
-alter table public.media enable row level security;
-alter table public.formations enable row level security;
-alter table public.league_teams enable row level security;
-alter table public.league_matches enable row level security;
-alter table public.league_standings enable row level security;
-alter table public.tournament_teams enable row level security;
-alter table public.tournament_pools enable row level security;
-alter table public.pool_matches enable row level security;
-alter table public.pool_standings enable row level security;
-alter table public.knockout_matches enable row level security;
-
--- Lecture publique sur toutes les tables
 do $$
 declare t text;
 begin
   foreach t in array array[
-    'players','matches','player_stats','competitions','trophies','media',
-    'formations','league_teams','league_matches','league_standings',
+    'players','matches','player_stats','competitions','trophies','media','formations',
+    'league_teams','league_matches','league_standings',
     'tournament_teams','tournament_pools','pool_matches','pool_standings','knockout_matches'
   ]
   loop
+    execute format('alter table public.%I enable row level security', t);
     execute format('create policy "lecture publique" on public.%I for select using (true)', t);
-  end loop;
-end;
-$$;
-
--- Écriture réservée aux utilisateurs authentifiés
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'players','matches','player_stats','competitions','trophies','media',
-    'formations','league_teams','league_matches','league_standings',
-    'tournament_teams','tournament_pools','pool_matches','pool_standings','knockout_matches'
-  ]
-  loop
     execute format('create policy "ecriture admin" on public.%I for all using (auth.role() = ''authenticated'')', t);
   end loop;
 end;
 $$;
 
 -- ============================================================
--- STORAGE — buckets pour les fichiers
+-- STORAGE
 -- ============================================================
 
 insert into storage.buckets (id, name, public) values ('media', 'media', true);
 insert into storage.buckets (id, name, public) values ('trophies', 'trophies', true);
 insert into storage.buckets (id, name, public) values ('players', 'players', true);
 
--- Accès public en lecture sur les buckets
-create policy "lecture publique media" on storage.objects for select using (bucket_id in ('media','trophies','players'));
--- Upload réservé aux authentifiés
-create policy "upload admin" on storage.objects for insert with check (auth.role() = 'authenticated' and bucket_id in ('media','trophies','players'));
-create policy "delete admin" on storage.objects for delete using (auth.role() = 'authenticated' and bucket_id in ('media','trophies','players'));
+create policy "lecture publique storage" on storage.objects
+  for select using (bucket_id in ('media', 'trophies', 'players'));
+
+create policy "upload admin" on storage.objects
+  for insert with check (auth.role() = 'authenticated' and bucket_id in ('media', 'trophies', 'players'));
+
+create policy "delete admin" on storage.objects
+  for delete using (auth.role() = 'authenticated' and bucket_id in ('media', 'trophies', 'players'));
 
 -- ============================================================
--- REALTIME — activer pour les tables qui en ont besoin
+-- REALTIME
 -- ============================================================
 
 alter publication supabase_realtime add table public.competitions;

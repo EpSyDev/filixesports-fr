@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
 export const useCompetitionLock = (competitionId) => {
@@ -9,19 +8,16 @@ export const useCompetitionLock = (competitionId) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!competitionId) {
-      setLoading(false);
-      return;
-    }
+    if (!competitionId) { setLoading(false); return; }
 
     const fetchLockState = async () => {
       try {
         setLoading(true);
-        const record = await pb.collection('competitions').getOne(competitionId, { $autoCancel: false });
-        setIsLocked(!!record.locked);
+        const { data, error } = await supabase.from('competitions').select('locked').eq('id', competitionId).single();
+        if (error) throw error;
+        setIsLocked(!!data.locked);
         setError(null);
       } catch (err) {
-        console.error("Failed to fetch lock state:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -30,27 +26,32 @@ export const useCompetitionLock = (competitionId) => {
 
     fetchLockState();
 
-    pb.collection('competitions').subscribe(competitionId, function (e) {
-      setIsLocked(!!e.record.locked);
-    });
+    const channel = supabase.channel(`competition-lock-${competitionId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'competitions',
+        filter: `id=eq.${competitionId}`
+      }, (payload) => {
+        setIsLocked(!!payload.new.locked);
+      })
+      .subscribe();
 
-    return () => {
-      pb.collection('competitions').unsubscribe(competitionId);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [competitionId]);
 
   const toggleLock = async () => {
     try {
       setLoading(true);
-      const record = await pb.collection('competitions').update(competitionId, {
-        locked: !isLocked
-      }, { $autoCancel: false });
-      
-      setIsLocked(!!record.locked);
-      toast.success(record.locked ? 'Sélections verrouillées avec succès' : 'Sélections déverrouillées avec succès');
-      return record.locked;
+      const { data, error } = await supabase
+        .from('competitions')
+        .update({ locked: !isLocked })
+        .eq('id', competitionId)
+        .select('locked')
+        .single();
+      if (error) throw error;
+      setIsLocked(!!data.locked);
+      toast.success(data.locked ? 'Sélections verrouillées' : 'Sélections déverrouillées');
+      return data.locked;
     } catch (err) {
-      console.error("Failed to toggle lock state:", err);
       toast.error('Erreur lors de la modification du verrouillage');
       throw err;
     } finally {
@@ -58,10 +59,5 @@ export const useCompetitionLock = (competitionId) => {
     }
   };
 
-  return {
-    isLocked,
-    toggleLock,
-    loading,
-    error
-  };
+  return { isLocked, toggleLock, loading, error };
 };

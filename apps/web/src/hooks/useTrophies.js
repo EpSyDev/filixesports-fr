@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const useTrophies = () => {
   const [trophies, setTrophies] = useState([]);
@@ -10,11 +9,9 @@ export const useTrophies = () => {
   const fetchTrophies = async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('trophies').getFullList({
-        sort: '-year',
-        $autoCancel: false
-      });
-      setTrophies(records);
+      const { data, error } = await supabase.from('trophies').select('*').order('year', { ascending: false });
+      if (error) throw error;
+      setTrophies(data);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -23,58 +20,49 @@ export const useTrophies = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTrophies();
-  }, []);
+  useEffect(() => { fetchTrophies(); }, []);
 
   const createTrophy = async (data) => {
-    try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-      const record = await pb.collection('trophies').create(formData, { $autoCancel: false });
-      await fetchTrophies();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
+    const { image, ...rest } = data;
+    let imageUrl = '';
+
+    if (image instanceof File) {
+      const path = `${Date.now()}-${image.name}`;
+      const { error: uploadError } = await supabase.storage.from('trophies').upload(path, image);
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: { publicUrl } } = supabase.storage.from('trophies').getPublicUrl(path);
+      imageUrl = publicUrl;
     }
+
+    const { data: record, error } = await supabase.from('trophies').insert({ ...rest, image: imageUrl }).select().single();
+    if (error) throw new Error(error.message);
+    await fetchTrophies();
+    return record;
   };
 
   const updateTrophy = async (id, data) => {
-    try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-      const record = await pb.collection('trophies').update(id, formData, { $autoCancel: false });
-      await fetchTrophies();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
+    const { image, ...rest } = data;
+    let imageUrl = typeof image === 'string' ? image : '';
+
+    if (image instanceof File) {
+      const path = `${Date.now()}-${image.name}`;
+      const { error: uploadError } = await supabase.storage.from('trophies').upload(path, image);
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: { publicUrl } } = supabase.storage.from('trophies').getPublicUrl(path);
+      imageUrl = publicUrl;
     }
+
+    const { data: record, error } = await supabase.from('trophies').update({ ...rest, image: imageUrl }).eq('id', id).select().single();
+    if (error) throw new Error(error.message);
+    await fetchTrophies();
+    return record;
   };
 
   const deleteTrophy = async (id) => {
-    try {
-      await pb.collection('trophies').delete(id, { $autoCancel: false });
-      await fetchTrophies();
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { error } = await supabase.from('trophies').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    await fetchTrophies();
   };
 
-  return {
-    trophies,
-    loading,
-    error,
-    createTrophy,
-    updateTrophy,
-    deleteTrophy,
-    refetch: fetchTrophies
-  };
+  return { trophies, loading, error, createTrophy, updateTrophy, deleteTrophy, refetch: fetchTrophies };
 };

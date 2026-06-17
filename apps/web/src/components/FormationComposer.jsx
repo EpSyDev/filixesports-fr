@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import FormationField from './FormationField';
@@ -23,15 +23,15 @@ const FormationComposer = ({ isReadOnly }) => {
     const fetchData = async () => {
       try {
         const [playersRes, formationsRes] = await Promise.all([
-          pb.collection('players').getFullList({ sort: 'name', $autoCancel: false }),
-          pb.collection('formations').getFullList({ sort: '-created', $autoCancel: false })
+          supabase.from('players').select('*').order('name', { ascending: true }),
+          supabase.from('formations').select('*').order('created_at', { ascending: false })
         ]);
-        setPlayers(playersRes);
-        setFormations(formationsRes);
-        
-        // Auto-load the most recent formation to simplify the view
-        if (formationsRes.length > 0) {
-          loadFormation(formationsRes[0].id, formationsRes, playersRes);
+        if (playersRes.error) throw playersRes.error;
+        if (formationsRes.error) throw formationsRes.error;
+        setPlayers(playersRes.data);
+        setFormations(formationsRes.data);
+        if (formationsRes.data.length > 0) {
+          loadFormation(formationsRes.data[0].id, formationsRes.data, playersRes.data);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -122,11 +122,15 @@ const FormationComposer = ({ isReadOnly }) => {
 
       let savedRecord;
       if (selectedFormationId !== 'new') {
-        savedRecord = await pb.collection('formations').update(selectedFormationId, payload, { $autoCancel: false });
+        const { data, error } = await supabase.from('formations').update(payload).eq('id', selectedFormationId).select().single();
+        if (error) throw error;
+        savedRecord = data;
         setFormations(prev => prev.map(f => f.id === savedRecord.id ? savedRecord : f));
         toast.success('Formation mise à jour avec succès');
       } else {
-        savedRecord = await pb.collection('formations').create(payload, { $autoCancel: false });
+        const { data, error } = await supabase.from('formations').insert(payload).select().single();
+        if (error) throw error;
+        savedRecord = data;
         setFormations(prev => [savedRecord, ...prev]);
         setSelectedFormationId(savedRecord.id);
         toast.success('Formation sauvegardée avec succès');

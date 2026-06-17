@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
-import pb from '@/lib/pocketbaseClient';
 import { cn } from '@/lib/utils';
 
 // Layout configuration for 3-5-2 with aligned MDCs
@@ -60,7 +59,7 @@ const PlayerSlot = ({
           <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full border-2 border-primary bg-muted overflow-hidden mb-1 shadow-sm">
             {player.photo ? (
               <img 
-                src={pb.files.getUrl(player, player.photo)} 
+                src={player.photo} 
                 alt={player.name}
                 className="w-full h-full object-cover"
                 crossOrigin="anonymous"

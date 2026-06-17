@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const usePlayers = () => {
   const [players, setPlayers] = useState([]);
@@ -10,11 +9,9 @@ export const usePlayers = () => {
   const fetchPlayers = async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('players').getFullList({
-        sort: 'number',
-        $autoCancel: false
-      });
-      setPlayers(records);
+      const { data, error } = await supabase.from('players').select('*').order('number', { ascending: true });
+      if (error) throw error;
+      setPlayers(data);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -23,59 +20,27 @@ export const usePlayers = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPlayers();
-  }, []);
+  useEffect(() => { fetchPlayers(); }, []);
 
   const createPlayer = async (data) => {
-    try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-      const record = await pb.collection('players').create(formData, { $autoCancel: false });
-      await fetchPlayers();
-      return record;
-    } catch (err) {
-      throw new Error(err?.response?.message || err.message || "Erreur lors de la création");
-    }
+    const { data: record, error } = await supabase.from('players').insert(data).select().single();
+    if (error) throw new Error(error?.message || 'Erreur lors de la création');
+    await fetchPlayers();
+    return record;
   };
 
   const updatePlayer = async (id, data) => {
-    try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-      const record = await pb.collection('players').update(id, formData, { $autoCancel: false });
-      await fetchPlayers();
-      return record;
-    } catch (err) {
-      throw new Error(err?.response?.message || err.message || "Erreur lors de la mise à jour");
-    }
+    const { data: record, error } = await supabase.from('players').update(data).eq('id', id).select().single();
+    if (error) throw new Error(error?.message || 'Erreur lors de la mise à jour');
+    await fetchPlayers();
+    return record;
   };
 
   const deletePlayer = async (id) => {
-    try {
-      await pb.collection('players').delete(id, { $autoCancel: false });
-      await fetchPlayers();
-    } catch (err) {
-      console.error("Error deleting player:", err);
-      throw new Error(err?.response?.message || err.message || "Erreur lors de la suppression");
-    }
+    const { error } = await supabase.from('players').delete().eq('id', id);
+    if (error) throw new Error(error?.message || 'Erreur lors de la suppression');
+    await fetchPlayers();
   };
 
-  return {
-    players,
-    loading,
-    error,
-    createPlayer,
-    updatePlayer,
-    deletePlayer,
-    refetch: fetchPlayers
-  };
+  return { players, loading, error, createPlayer, updatePlayer, deletePlayer, refetch: fetchPlayers };
 };

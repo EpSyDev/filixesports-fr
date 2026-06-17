@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,13 +39,16 @@ const MatchManager = ({ competitionId }) => {
     setLoading(true);
     try {
       const [teamsRes, matchesRes, standingsRes] = await Promise.all([
-        pb.collection('league_teams').getFullList({ filter: `competitionId="${competitionId}"`, sort: 'teamName', $autoCancel: false }),
-        pb.collection('league_matches').getFullList({ filter: `competitionId="${competitionId}"`, sort: '-created', $autoCancel: false }),
-        pb.collection('league_standings').getFullList({ filter: `competitionId="${competitionId}"`, sort: 'rank', $autoCancel: false })
+        supabase.from('league_teams').select('*').eq('competitionId', competitionId).order('teamName', { ascending: true }),
+        supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('created_at', { ascending: false }),
+        supabase.from('league_standings').select('*').eq('competitionId', competitionId).order('rank', { ascending: true })
       ]);
-      setTeams(teamsRes);
-      setMatches(matchesRes);
-      setStandings(standingsRes);
+      if (teamsRes.error) throw teamsRes.error;
+      if (matchesRes.error) throw matchesRes.error;
+      if (standingsRes.error) throw standingsRes.error;
+      setTeams(teamsRes.data);
+      setMatches(matchesRes.data);
+      setStandings(standingsRes.data);
     } catch (error) {
       console.error(error);
       toast.error('Erreur lors du chargement des données.');
@@ -58,30 +61,17 @@ const MatchManager = ({ competitionId }) => {
     // Calculates updated standings array based on the new match results and teams
     const newStandingsData = calculateLeagueStandings(newMatches, teams);
     
-    // Process updates sequentially to avoid potential SQLite busy locks with many records
-    for (const ns of newStandingsData) {
+    await Promise.all(newStandingsData.map(ns => {
       const existingRec = standings.find(s => s.teamName === ns.teamName);
-      if (existingRec) {
-        await pb.collection('league_standings').update(existingRec.id, {
-          played: ns.played,
-          won: ns.won,
-          drawn: ns.drawn,
-          lost: ns.lost,
-          points: ns.points,
-          goalsFor: ns.goalsFor,
-          goalsAgainst: ns.goalsAgainst,
-          rank: ns.rank
-        }, { $autoCancel: false });
-      }
-    }
-    
-    // Refresh the local state so the next update has the latest IDs/versions
-    const refreshed = await pb.collection('league_standings').getFullList({ 
-      filter: `competitionId="${competitionId}"`, 
-      sort: 'rank', 
-      $autoCancel: false 
-    });
-    setStandings(refreshed);
+      if (!existingRec) return Promise.resolve();
+      return supabase.from('league_standings').update({
+        played: ns.played, won: ns.won, drawn: ns.drawn, lost: ns.lost,
+        points: ns.points, goalsFor: ns.goalsFor, goalsAgainst: ns.goalsAgainst, rank: ns.rank
+      }).eq('id', existingRec.id);
+    }));
+
+    const { data: refreshed } = await supabase.from('league_standings').select('*').eq('competitionId', competitionId).order('rank', { ascending: true });
+    setStandings(refreshed || []);
   };
 
   const handleCreateMatch = async (e) => {
@@ -97,13 +87,10 @@ const MatchManager = ({ competitionId }) => {
 
     setIsSubmitting(true);
     try {
-      const created = await pb.collection('league_matches').create({
-        competitionId,
-        homeTeam: newMatch.homeTeam,
-        awayTeam: newMatch.awayTeam,
-        status: 'scheduled'
-      }, { $autoCancel: false });
-      
+      const { data: created, error } = await supabase.from('league_matches').insert({
+        competitionId, homeTeam: newMatch.homeTeam, awayTeam: newMatch.awayTeam, status: 'scheduled'
+      }).select().single();
+      if (error) throw error;
       setMatches([created, ...matches]);
       setNewMatch({ homeTeam: '', awayTeam: '' });
       toast.success('Match créé avec succès.');
@@ -137,24 +124,14 @@ const MatchManager = ({ competitionId }) => {
         finalMatches = [...finalMatches, ...returnMatches];
       }
 
-      const createdMatches = [];
-      for (const m of finalMatches) {
-        const created = await pb.collection('league_matches').create({
-          competitionId,
-          matchday: m.matchday,
-          homeTeam: m.homeTeam,
-          awayTeam: m.awayTeam,
-          status: 'scheduled'
-        }, { $autoCancel: false });
-        createdMatches.push(created);
-      }
+      const toInsert = finalMatches.map(m => ({
+        competitionId, matchday: m.matchday, homeTeam: m.homeTeam, awayTeam: m.awayTeam, status: 'scheduled'
+      }));
+      const { data: createdMatches, error: insertErr } = await supabase.from('league_matches').insert(toInsert).select();
+      if (insertErr) throw insertErr;
 
-      const newMatchesRes = await pb.collection('league_matches').getFullList({ 
-        filter: `competitionId="${competitionId}"`, 
-        sort: '-created', 
-        $autoCancel: false 
-      });
-      setMatches(newMatchesRes);
+      const { data: newMatchesRes } = await supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('created_at', { ascending: false });
+      setMatches(newMatchesRes || []);
       
       setIsGenerateDialogOpen(false);
       toast.success(`${createdMatches.length} matchs générés avec succès.`);
@@ -182,7 +159,8 @@ const MatchManager = ({ competitionId }) => {
         status: status
       };
       
-      const saved = await pb.collection('league_matches').update(matchId, payload, { $autoCancel: false });
+      const { data: saved, error: updateErr } = await supabase.from('league_matches').update(payload).eq('id', matchId).select().single();
+      if (updateErr) throw updateErr;
       const newMatches = matches.map(m => m.id === saved.id ? saved : m);
       
       setMatches(newMatches);
@@ -201,7 +179,8 @@ const MatchManager = ({ competitionId }) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce match ?')) return;
 
     try {
-      await pb.collection('league_matches').delete(id, { $autoCancel: false });
+      const { error: delErr } = await supabase.from('league_matches').delete().eq('id', id);
+      if (delErr) throw delErr;
       const newMatches = matches.filter(m => m.id !== id);
       setMatches(newMatches);
       

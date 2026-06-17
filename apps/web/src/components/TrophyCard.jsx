@@ -1,11 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import pb from '@/lib/pocketbaseClient';
 import { Trophy } from 'lucide-react';
 
 const TrophyCard = ({ trophy }) => {
-  const imageUrl = trophy.image ? pb.files.getUrl(trophy, trophy.image) : null;
+  const imageUrl = trophy.image || null;
 
   return (
     <Card className="bg-card border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1">

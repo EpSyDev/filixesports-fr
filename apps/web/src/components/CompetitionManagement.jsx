@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ const CompetitionManagement = () => {
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [selectedCompId, setSelectedCompId] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,14 +35,11 @@ const CompetitionManagement = () => {
   const fetchCompetitions = async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('competitions').getFullList({
-        sort: '-created',
-        $autoCancel: false
-      });
-      setCompetitions(records);
+      const { data, error } = await supabase.from('competitions').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setCompetitions(data);
       setError(null);
     } catch (err) {
-      console.error('Erreur lors du chargement des compétitions:', err);
       setError('Impossible de charger les compétitions.');
       toast.error('Erreur de chargement');
     } finally {
@@ -53,26 +50,13 @@ const CompetitionManagement = () => {
   useEffect(() => {
     fetchCompetitions();
 
-    // Subscribe to real-time updates for competitions collection
-    let isSubscribed = true;
-    const subscribeToCompetitions = async () => {
-      try {
-        await pb.collection('competitions').subscribe('*', (e) => {
-          if (isSubscribed && (e.action === 'create' || e.action === 'update' || e.action === 'delete')) {
-            fetchCompetitions();
-          }
-        });
-      } catch (err) {
-        console.error('Subscription error:', err);
-      }
-    };
-    
-    subscribeToCompetitions();
+    const channel = supabase.channel('comp-management')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'competitions' }, () => {
+        fetchCompetitions();
+      })
+      .subscribe();
 
-    return () => {
-      isSubscribed = false;
-      pb.collection('competitions').unsubscribe('*').catch(console.error);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const selectedComp = competitions.find(c => c.id === selectedCompId);
@@ -92,21 +76,16 @@ const CompetitionManagement = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!createData.name.trim()) return;
-    
     setIsSubmitting(true);
     try {
-      const newComp = await pb.collection('competitions').create({
-        ...createData,
-        locked: false
-      }, { $autoCancel: false });
-      
+      const { data: newComp, error } = await supabase.from('competitions').insert({ ...createData, locked: false }).select().single();
+      if (error) throw error;
       toast.success('Compétition créée avec succès');
       setIsCreateOpen(false);
       setCreateData({ name: '', season: new Date().getFullYear().toString(), type: 'LIGUE', status: 'draft', description: '' });
       setSelectedCompId(newComp.id);
     } catch (err) {
       toast.error('Erreur lors de la création de la compétition');
-      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -115,14 +94,13 @@ const CompetitionManagement = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!selectedCompId || !editData.name.trim()) return;
-
     setIsSubmitting(true);
     try {
-      await pb.collection('competitions').update(selectedCompId, editData, { $autoCancel: false });
+      const { error } = await supabase.from('competitions').update(editData).eq('id', selectedCompId);
+      if (error) throw error;
       toast.success('Paramètres mis à jour');
     } catch (err) {
       toast.error('Erreur lors de la mise à jour');
-      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,36 +108,17 @@ const CompetitionManagement = () => {
 
   const handleDelete = async () => {
     if (!selectedCompId) return;
-    if (!window.confirm('Supprimer cette compétition et toutes ses données associées (matchs, équipes, classements) ? Cette action est irréversible.')) return;
-
+    if (!window.confirm('Supprimer cette compétition et toutes ses données associées ? Cette action est irréversible.')) return;
     setIsDeleting(true);
     try {
-      const filter = `competitionId="${selectedCompId}"`;
-      const collectionsToClean = [
-        'league_matches', 'league_teams', 'league_standings',
-        'pool_matches', 'pool_standings', 'knockout_matches',
-        'tournament_teams', 'tournament_pools', 'tournament_standings'
-      ];
-
-      toast.loading("Suppression des données liées en cours...", { id: "delete-toast" });
-      
-      for (const coll of collectionsToClean) {
-        try {
-          const records = await pb.collection(coll).getFullList({ filter, $autoCancel: false });
-          for (const record of records) {
-            await pb.collection(coll).delete(record.id, { $autoCancel: false });
-          }
-        } catch (e) {
-          // Ignore if collection is empty or fails
-        }
-      }
-
-      await pb.collection('competitions').delete(selectedCompId, { $autoCancel: false });
-      toast.success('Compétition supprimée avec succès', { id: "delete-toast" });
+      toast.loading('Suppression en cours...', { id: 'delete-toast' });
+      // Les FK ON DELETE CASCADE suppriment automatiquement les données liées
+      const { error } = await supabase.from('competitions').delete().eq('id', selectedCompId);
+      if (error) throw error;
+      toast.success('Compétition supprimée', { id: 'delete-toast' });
       setSelectedCompId('');
     } catch (err) {
-      toast.error('Erreur lors de la suppression', { id: "delete-toast" });
-      console.error(err);
+      toast.error('Erreur lors de la suppression', { id: 'delete-toast' });
     } finally {
       setIsDeleting(false);
     }
@@ -169,9 +128,7 @@ const CompetitionManagement = () => {
     return (
       <div className="p-6 bg-destructive/10 text-destructive rounded-xl border border-destructive/20 text-center">
         <p className="font-semibold">{error}</p>
-        <Button onClick={fetchCompetitions} variant="outline" className="mt-4 border-destructive/30 hover:bg-destructive/20 text-destructive">
-          Réessayer
-        </Button>
+        <Button onClick={fetchCompetitions} variant="outline" className="mt-4 border-destructive/30 hover:bg-destructive/20 text-destructive">Réessayer</Button>
       </div>
     );
   }
@@ -184,7 +141,6 @@ const CompetitionManagement = () => {
             <CardTitle className="text-xl flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" /> Sélecteur de Compétition
             </CardTitle>
-            
             <div className="flex w-full sm:w-auto items-center gap-2">
               {loading ? (
                 <Skeleton className="w-full sm:w-[250px] h-11 rounded-md" />
@@ -198,46 +154,29 @@ const CompetitionManagement = () => {
                       <SelectItem value="none" disabled>Aucune compétition trouvée</SelectItem>
                     ) : (
                       competitions.map(c => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name} {c.season && `(${c.season})`}
-                        </SelectItem>
+                        <SelectItem key={c.id} value={c.id}>{c.name} {c.season && `(${c.season})`}</SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
               )}
-
               <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogTrigger asChild>
                   <Button className="min-h-[44px] shrink-0" title="Nouvelle compétition">
-                    <Plus className="w-5 h-5 sm:mr-2" />
-                    <span className="hidden sm:inline">Nouvelle</span>
+                    <Plus className="w-5 h-5 sm:mr-2" /><span className="hidden sm:inline">Nouvelle</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Créer une compétition</DialogTitle>
-                  </DialogHeader>
+                  <DialogHeader><DialogTitle>Créer une compétition</DialogTitle></DialogHeader>
                   <form onSubmit={handleCreate} className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Nom de la compétition</label>
-                      <Input 
-                        placeholder="Ex: Ligue FC25" 
-                        value={createData.name} 
-                        onChange={e => setCreateData({...createData, name: e.target.value})} 
-                        required 
-                        className="min-h-[44px]"
-                      />
+                      <Input placeholder="Ex: Ligue FC25" value={createData.name} onChange={e => setCreateData({...createData, name: e.target.value})} required className="min-h-[44px]" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Saison</label>
-                        <Input 
-                          placeholder="2026" 
-                          value={createData.season} 
-                          onChange={e => setCreateData({...createData, season: e.target.value})} 
-                          className="min-h-[44px]"
-                        />
+                        <Input placeholder="2026" value={createData.season} onChange={e => setCreateData({...createData, season: e.target.value})} className="min-h-[44px]" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Type</label>
@@ -252,12 +191,7 @@ const CompetitionManagement = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Description</label>
-                      <Input 
-                        placeholder="Description optionnelle..." 
-                        value={createData.description} 
-                        onChange={e => setCreateData({...createData, description: e.target.value})} 
-                        className="min-h-[44px]"
-                      />
+                      <Input placeholder="Description optionnelle..." value={createData.description} onChange={e => setCreateData({...createData, description: e.target.value})} className="min-h-[44px]" />
                     </div>
                     <Button type="submit" disabled={isSubmitting} className="w-full min-h-[44px] mt-2">
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer'}
@@ -277,9 +211,7 @@ const CompetitionManagement = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold text-foreground">Aucune compétition sélectionnée</h3>
-            <p className="text-muted-foreground mt-1 max-w-sm mx-auto">
-              Sélectionnez une compétition existante dans le menu déroulant ou créez-en une nouvelle pour gérer ses équipes, matchs et classements.
-            </p>
+            <p className="text-muted-foreground mt-1 max-w-sm mx-auto">Sélectionnez une compétition existante ou créez-en une nouvelle.</p>
           </div>
         </div>
       )}
@@ -288,58 +220,36 @@ const CompetitionManagement = () => {
         <Tabs defaultValue="teams" className="w-full">
           <div className="overflow-x-auto pb-2 mb-6 custom-scrollbar">
             <TabsList className="inline-flex w-max min-w-full h-auto p-1 bg-muted/50">
-              <TabsTrigger value="teams" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2">
-                <Users className="w-4 h-4" /> Équipes
-              </TabsTrigger>
-              <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2">
-                <CalendarDays className="w-4 h-4" /> Matchs
-              </TabsTrigger>
-              <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" /> Résultats
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2 ml-auto">
-                <Settings className="w-4 h-4" /> Paramètres
-              </TabsTrigger>
+              <TabsTrigger value="teams" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><Users className="w-4 h-4" /> Équipes</TabsTrigger>
+              <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Matchs</TabsTrigger>
+              <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Résultats</TabsTrigger>
+              <TabsTrigger value="settings" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2 ml-auto"><Settings className="w-4 h-4" /> Paramètres</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="teams" className="animate-in fade-in duration-300">
             <CompetitionTeamsManager competitionId={selectedCompId} />
           </TabsContent>
-          
           <TabsContent value="matches" className="animate-in fade-in duration-300">
             <MatchManager competitionId={selectedCompId} />
           </TabsContent>
-          
           <TabsContent value="results" className="animate-in fade-in duration-300">
             <StandingsTable competitionId={selectedCompId} />
           </TabsContent>
-
           <TabsContent value="settings" className="animate-in fade-in duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-card shadow-sm border-border">
-                <CardHeader>
-                  <CardTitle>Paramètres de la compétition</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Paramètres de la compétition</CardTitle></CardHeader>
                 <CardContent>
                   <form onSubmit={handleUpdate} className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Nom</label>
-                      <Input 
-                        value={editData.name} 
-                        onChange={e => setEditData({...editData, name: e.target.value})} 
-                        required 
-                        className="min-h-[44px]"
-                      />
+                      <Input value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required className="min-h-[44px]" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Saison</label>
-                        <Input 
-                          value={editData.season} 
-                          onChange={e => setEditData({...editData, season: e.target.value})} 
-                          className="min-h-[44px]"
-                        />
+                        <Input value={editData.season} onChange={e => setEditData({...editData, season: e.target.value})} className="min-h-[44px]" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Statut</label>
@@ -355,11 +265,7 @@ const CompetitionManagement = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Description</label>
-                      <Input 
-                        value={editData.description} 
-                        onChange={e => setEditData({...editData, description: e.target.value})} 
-                        className="min-h-[44px]"
-                      />
+                      <Input value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} className="min-h-[44px]" />
                     </div>
                     <Button type="submit" disabled={isSubmitting} className="w-full min-h-[44px] mt-4">
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
@@ -367,21 +273,11 @@ const CompetitionManagement = () => {
                   </form>
                 </CardContent>
               </Card>
-
               <Card className="bg-destructive/5 border-destructive/20 shadow-sm h-fit">
-                <CardHeader>
-                  <CardTitle className="text-destructive">Zone de danger</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="text-destructive">Zone de danger</CardTitle></CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    La suppression de cette compétition entraînera la perte définitive de toutes les équipes, matchs et classements qui y sont associés.
-                  </p>
-                  <Button 
-                    variant="destructive" 
-                    onClick={handleDelete} 
-                    disabled={isDeleting}
-                    className="w-full min-h-[44px]"
-                  >
+                  <p className="text-sm text-muted-foreground mb-6">La suppression entraînera la perte définitive de toutes les équipes, matchs et classements associés.</p>
+                  <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} className="w-full min-h-[44px]">
                     {isDeleting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Trash2 className="w-5 h-5 mr-2" />}
                     Supprimer la compétition
                   </Button>

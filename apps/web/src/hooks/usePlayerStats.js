@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const usePlayerStats = (playerId = null) => {
   const [playerStats, setPlayerStats] = useState([]);
@@ -10,13 +9,18 @@ export const usePlayerStats = (playerId = null) => {
   const fetchPlayerStats = async () => {
     try {
       setLoading(true);
-      const filter = playerId ? `playerId = "${playerId}"` : '';
-      const records = await pb.collection('player_stats').getFullList({
-        filter,
-        expand: 'playerId,matchId',
-        sort: '-matchId.date',
-        $autoCancel: false
-      });
+      let query = supabase
+        .from('player_stats')
+        .select('*, player:players(id, name, number, position), match:matches(id, date, opponent)')
+        .order('created_at', { ascending: false });
+      if (playerId) query = query.eq('playerId', playerId);
+      const { data, error } = await query;
+      if (error) throw error;
+      // Normalise expand pour compatibilité
+      const records = data.map(s => ({
+        ...s,
+        expand: { playerId: s.player, matchId: s.match }
+      }));
       setPlayerStats(records);
       setError(null);
     } catch (err) {
@@ -26,46 +30,27 @@ export const usePlayerStats = (playerId = null) => {
     }
   };
 
-  useEffect(() => {
-    fetchPlayerStats();
-  }, [playerId]);
+  useEffect(() => { fetchPlayerStats(); }, [playerId]);
 
   const createPlayerStat = async (data) => {
-    try {
-      const record = await pb.collection('player_stats').create(data, { $autoCancel: false });
-      await fetchPlayerStats();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('player_stats').insert(data).select().single();
+    if (error) throw new Error(error.message);
+    await fetchPlayerStats();
+    return record;
   };
 
   const updatePlayerStat = async (id, data) => {
-    try {
-      const record = await pb.collection('player_stats').update(id, data, { $autoCancel: false });
-      await fetchPlayerStats();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('player_stats').update(data).eq('id', id).select().single();
+    if (error) throw new Error(error.message);
+    await fetchPlayerStats();
+    return record;
   };
 
   const deletePlayerStat = async (id) => {
-    try {
-      await pb.collection('player_stats').delete(id, { $autoCancel: false });
-      await fetchPlayerStats();
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { error } = await supabase.from('player_stats').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    await fetchPlayerStats();
   };
 
-  return {
-    playerStats,
-    loading,
-    error,
-    createPlayerStat,
-    updatePlayerStat,
-    deletePlayerStat,
-    refetch: fetchPlayerStats
-  };
+  return { playerStats, loading, error, createPlayerStat, updatePlayerStat, deletePlayerStat, refetch: fetchPlayerStats };
 };

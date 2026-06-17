@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useMedia } from '@/hooks/useMedia';
-import pb from '@/lib/pocketbaseClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Image, Video } from 'lucide-react';
@@ -73,7 +72,7 @@ const MediaPage = () => {
                         className="group relative aspect-video rounded-xl overflow-hidden bg-muted"
                       >
                         <img 
-                          src={pb.files.getUrl(item, item.file)}
+                          src={item.url}
                           alt={item.title}
                           className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
                         />
@@ -115,7 +114,7 @@ const MediaPage = () => {
                       >
                         <div className="aspect-video rounded-xl overflow-hidden bg-muted">
                           <video 
-                            src={pb.files.getUrl(item, item.file)}
+                            src={item.url}
                             controls
                             className="w-full h-full"
                           />

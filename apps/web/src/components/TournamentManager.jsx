@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,18 +46,20 @@ const TournamentManager = ({ competition }) => {
     setLoading(true);
     try {
       const [teamsRes, poolsRes, pMatchesRes, pStandingsRes, kMatchesRes] = await Promise.all([
-        pb.collection('tournament_teams').getFullList({ filter: `competitionId="${competition.id}"`, $autoCancel: false }),
-        pb.collection('tournament_pools').getFullList({ filter: `competitionId="${competition.id}"`, sort: 'poolId', $autoCancel: false }),
-        pb.collection('pool_matches').getFullList({ filter: `competitionId="${competition.id}"`, $autoCancel: false }),
-        pb.collection('pool_standings').getFullList({ filter: `competitionId="${competition.id}"`, sort: 'rank', $autoCancel: false }),
-        pb.collection('knockout_matches').getFullList({ filter: `competitionId="${competition.id}"`, sort: '-round,matchNumber', $autoCancel: false })
+        supabase.from('tournament_teams').select('*').eq('competitionId', competition.id),
+        supabase.from('tournament_pools').select('*').eq('competitionId', competition.id).order('poolId', { ascending: true }),
+        supabase.from('pool_matches').select('*').eq('competitionId', competition.id),
+        supabase.from('pool_standings').select('*').eq('competitionId', competition.id).order('rank', { ascending: true }),
+        supabase.from('knockout_matches').select('*').eq('competitionId', competition.id).order('matchNumber', { ascending: true })
       ]);
-      setTeams(teamsRes);
-      setPools(poolsRes);
-      setPoolMatches(pMatchesRes);
-      setPoolStandings(pStandingsRes);
-      setKnockoutMatches(kMatchesRes);
-      setQualifiedTeams(pStandingsRes.filter(s => s.qualified) || []);
+      const t = teamsRes.data || [], p = poolsRes.data || [], pm = pMatchesRes.data || [],
+            ps = pStandingsRes.data || [], km = kMatchesRes.data || [];
+      setTeams(t);
+      setPools(p);
+      setPoolMatches(pm);
+      setPoolStandings(ps);
+      setKnockoutMatches(km);
+      setQualifiedTeams(ps.filter(s => s.qualified));
 
       if (kMatchesRes.length > 0) {
         setActiveTab('knockout');
@@ -85,8 +87,9 @@ const TournamentManager = ({ competition }) => {
         
         try {
           const matchesToCreate = generateKnockoutBracketFromPools(competition.id, qualifiedTeams);
-          for (const m of matchesToCreate) {
-            await pb.collection('knockout_matches').create(m, { $autoCancel: false });
+          if (matchesToCreate.length > 0) {
+            const { error: kErr } = await supabase.from('knockout_matches').insert(matchesToCreate);
+            if (kErr) throw kErr;
           }
           
           await refreshKnockoutMatches();
@@ -109,9 +112,10 @@ const TournamentManager = ({ competition }) => {
   const refreshStandings = async () => {
     setIsUpdatingStandings(true);
     try {
-      const pStandingsRes = await pb.collection('pool_standings').getFullList({ filter: `competitionId="${competition.id}"`, sort: 'rank', $autoCancel: false });
-      setPoolStandings(pStandingsRes);
-      setQualifiedTeams(pStandingsRes.filter(s => s.qualified) || []);
+      const { data: pStandingsData } = await supabase.from('pool_standings').select('*').eq('competitionId', competition.id).order('rank', { ascending: true });
+      const ps2 = pStandingsData || [];
+      setPoolStandings(ps2);
+      setQualifiedTeams(ps2.filter(s => s.qualified));
     } catch (error) {
       console.error("Error refreshing standings:", error);
     } finally {
@@ -121,8 +125,8 @@ const TournamentManager = ({ competition }) => {
 
   const refreshKnockoutMatches = async () => {
     try {
-      const kMatchesRes = await pb.collection('knockout_matches').getFullList({ filter: `competitionId="${competition.id}"`, sort: '-round,matchNumber', $autoCancel: false });
-      setKnockoutMatches(kMatchesRes);
+      const { data: kMatchesData } = await supabase.from('knockout_matches').select('*').eq('competitionId', competition.id).order('matchNumber', { ascending: true });
+      setKnockoutMatches(kMatchesData || []);
     } catch (error) {
       console.error("Error refreshing knockout matches:", error);
     }
@@ -140,7 +144,7 @@ const TournamentManager = ({ competition }) => {
     setQualifiedTeams(prev => isSelected ? prev.filter(t => t.id !== team.id) : [...prev, team]);
 
     try {
-      await pb.collection('pool_standings').update(team.id, { qualified: !isSelected }, { $autoCancel: false });
+      await supabase.from('pool_standings').update({ qualified: !isSelected }).eq('id', team.id);
     } catch (error) {
       console.error("Failed to update qualified status", error);
       toast.error("Erreur de synchronisation.");
@@ -154,9 +158,9 @@ const TournamentManager = ({ competition }) => {
     setQualifiedTeams([]);
     
     try {
-      for (const t of previouslySelected) {
-        await pb.collection('pool_standings').update(t.id, { qualified: false }, { $autoCancel: false });
-      }
+      await Promise.all(previouslySelected.map(t =>
+        supabase.from('pool_standings').update({ qualified: false }).eq('id', t.id)
+      ));
       toast.success("Sélection réinitialisée.");
     } catch (err) {
       console.error(err);
@@ -172,11 +176,10 @@ const TournamentManager = ({ competition }) => {
     }
     
     try {
-      const record = await pb.collection('tournament_teams').create({
-        competitionId: competition.id,
-        teamName: newTeam.trim()
-      }, { $autoCancel: false });
-      
+      const { data: record, error } = await supabase.from('tournament_teams').insert({
+        competitionId: competition.id, teamName: newTeam.trim()
+      }).select().single();
+      if (error) throw error;
       setTeams([...teams, record]);
       setNewTeam('');
       toast.success('Équipe ajoutée');
@@ -191,7 +194,7 @@ const TournamentManager = ({ competition }) => {
 
   const handleDeleteTeam = async (id) => {
     try {
-      await pb.collection('tournament_teams').delete(id, { $autoCancel: false });
+      await supabase.from('tournament_teams').delete().eq('id', id);
       setTeams(teams.filter(t => t.id !== id));
       toast.success('Équipe supprimée');
     } catch (error) {
@@ -201,12 +204,10 @@ const TournamentManager = ({ competition }) => {
 
   const handleSavePoolMatch = async (updatedMatch) => {
     try {
-      const saved = await pb.collection('pool_matches').update(updatedMatch.id, {
-        homeScore: updatedMatch.homeScore,
-        awayScore: updatedMatch.awayScore,
-        status: updatedMatch.status
-      }, { $autoCancel: false });
-      
+      const { data: saved, error } = await supabase.from('pool_matches').update({
+        homeScore: updatedMatch.homeScore, awayScore: updatedMatch.awayScore, status: updatedMatch.status
+      }).eq('id', updatedMatch.id).select().single();
+      if (error) throw error;
       const newPoolMatches = poolMatches.map(m => m.id === saved.id ? saved : m);
       setPoolMatches(newPoolMatches);
 
@@ -218,9 +219,9 @@ const TournamentManager = ({ competition }) => {
       for (const ns of newStandings) {
         const existingRec = poolStandings.find(s => s.poolId === updatedMatch.poolId && s.teamName === ns.teamName);
         if (existingRec) {
-          await pb.collection('pool_standings').update(existingRec.id, {
+          await supabase.from('pool_standings').update({
             played: ns.played, points: ns.points, goalsFor: ns.goalsFor, goalsAgainst: ns.goalsAgainst, rank: ns.rank
-          }, { $autoCancel: false });
+          }).eq('id', existingRec.id);
         }
       }
       
@@ -243,12 +244,11 @@ const TournamentManager = ({ competition }) => {
         }
       }
 
-      const saved = await pb.collection('knockout_matches').update(updatedMatch.id, {
-        homeScore: updatedMatch.homeScore,
-        awayScore: updatedMatch.awayScore,
-        winner: winner,
-        status: updatedMatch.status
-      }, { $autoCancel: false });
+      const { data: saved, error: saveErr } = await supabase.from('knockout_matches').update({
+        homeScore: updatedMatch.homeScore, awayScore: updatedMatch.awayScore,
+        winner, status: updatedMatch.status
+      }).eq('id', updatedMatch.id).select().single();
+      if (saveErr) throw saveErr;
 
       const newKnockoutMatches = knockoutMatches.map(m => m.id === saved.id ? saved : m);
       setKnockoutMatches(newKnockoutMatches);
@@ -256,7 +256,7 @@ const TournamentManager = ({ competition }) => {
       if (winner) {
         const advancement = updateKnockoutBracketAfterMatch(updatedMatch, winner, newKnockoutMatches);
         if (advancement) {
-          await pb.collection('knockout_matches').update(advancement.matchId, advancement.updates, { $autoCancel: false });
+          await supabase.from('knockout_matches').update(advancement.updates).eq('id', advancement.matchId);
         } else if (updatedMatch.round === '2') {
           toast.success(`Le tournoi est terminé ! Le vainqueur est ${winner}`);
         }
@@ -277,13 +277,23 @@ const TournamentManager = ({ competition }) => {
     if (!window.confirm('Êtes-vous sûr de vouloir réinitialiser les poules ? Tous les matchs planifiés seront supprimés.')) return;
     
     try {
-      for (const m of poolMatches) await pb.collection('pool_matches').delete(m.id, { $autoCancel: false });
-      for (const s of poolStandings) await pb.collection('pool_standings').delete(s.id, { $autoCancel: false });
-      for (const p of pools) await pb.collection('tournament_pools').delete(p.id, { $autoCancel: false });
-      for (const k of knockoutMatches) await pb.collection('knockout_matches').delete(k.id, { $autoCancel: false });
-      
-      for (const t of teams) {
-        if (t.poolId) await pb.collection('tournament_teams').update(t.id, { poolId: null }, { $autoCancel: false });
+      const poolMatchIds = poolMatches.map(m => m.id);
+      const poolStandingIds = poolStandings.map(s => s.id);
+      const poolIds = pools.map(p => p.id);
+      const knockoutIds = knockoutMatches.map(k => k.id);
+
+      await Promise.all([
+        poolMatchIds.length > 0 ? supabase.from('pool_matches').delete().in('id', poolMatchIds) : Promise.resolve(),
+        poolStandingIds.length > 0 ? supabase.from('pool_standings').delete().in('id', poolStandingIds) : Promise.resolve(),
+        poolIds.length > 0 ? supabase.from('tournament_pools').delete().in('id', poolIds) : Promise.resolve(),
+        knockoutIds.length > 0 ? supabase.from('knockout_matches').delete().in('id', knockoutIds) : Promise.resolve()
+      ]);
+
+      const teamsWithPool = teams.filter(t => t.poolId);
+      if (teamsWithPool.length > 0) {
+        await Promise.all(teamsWithPool.map(t =>
+          supabase.from('tournament_teams').update({ poolId: null }).eq('id', t.id)
+        ));
       }
       
       setIsModifyingPools(true);

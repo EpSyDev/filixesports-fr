@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const useMedia = () => {
   const [media, setMedia] = useState([]);
@@ -10,11 +9,9 @@ export const useMedia = () => {
   const fetchMedia = async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('media').getFullList({
-        sort: '-uploadDate',
-        $autoCancel: false
-      });
-      setMedia(records);
+      const { data, error } = await supabase.from('media').select('*').order('uploadDate', { ascending: false });
+      if (error) throw error;
+      setMedia(data);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -23,41 +20,34 @@ export const useMedia = () => {
     }
   };
 
-  useEffect(() => {
-    fetchMedia();
-  }, []);
+  useEffect(() => { fetchMedia(); }, []);
 
   const createMedia = async (data) => {
-    try {
-      const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-      const record = await pb.collection('media').create(formData, { $autoCancel: false });
-      await fetchMedia();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
+    const { file, ...rest } = data;
+    let fileUrl = '';
+
+    if (file instanceof File) {
+      const path = `${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('media').upload(path, file);
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
+      fileUrl = publicUrl;
     }
+
+    const { data: record, error } = await supabase
+      .from('media')
+      .insert({ ...rest, file: fileUrl, uploadDate: new Date().toISOString() })
+      .select().single();
+    if (error) throw new Error(error.message);
+    await fetchMedia();
+    return record;
   };
 
   const deleteMedia = async (id) => {
-    try {
-      await pb.collection('media').delete(id, { $autoCancel: false });
-      await fetchMedia();
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { error } = await supabase.from('media').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    await fetchMedia();
   };
 
-  return {
-    media,
-    loading,
-    error,
-    createMedia,
-    deleteMedia,
-    refetch: fetchMedia
-  };
+  return { media, loading, error, createMedia, deleteMedia, refetch: fetchMedia };
 };

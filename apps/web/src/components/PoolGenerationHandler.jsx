@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { validatePoolAssignments, generatePoolMatches, generatePoolStandings } from '@/utils/competitionUtils';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { Network, Loader2 } from 'lucide-react';
 
@@ -19,29 +19,29 @@ const PoolGenerationHandler = ({ competitionId, pools, onSuccess }) => {
     try {
       // 1. Save Pools and update teams
       for (const pool of pools) {
-        const poolRec = await pb.collection('tournament_pools').create({
-          competitionId,
-          poolId: pool.id,
-          poolName: pool.name
-        }, { $autoCancel: false });
+        const { error: poolErr } = await supabase.from('tournament_pools').insert({
+          competitionId, poolId: pool.id, name: pool.name
+        });
+        if (poolErr) throw poolErr;
 
-        for (const team of pool.teams) {
-          await pb.collection('tournament_teams').update(team.id, {
-            poolId: poolRec.poolId
-          }, { $autoCancel: false });
-        }
+        const teamUpdates = pool.teams.map(team =>
+          supabase.from('tournament_teams').update({ poolId: pool.id }).eq('id', team.id)
+        );
+        await Promise.all(teamUpdates);
       }
 
       // 2. Generate and save matches
       const matches = generatePoolMatches(pools.map(p => ({ poolId: p.id, teams: p.teams })), competitionId);
-      for (const match of matches) {
-        await pb.collection('pool_matches').create(match, { $autoCancel: false });
+      if (matches.length > 0) {
+        const { error: mErr } = await supabase.from('pool_matches').insert(matches);
+        if (mErr) throw mErr;
       }
 
       // 3. Generate and save standings
       const standings = generatePoolStandings(pools.map(p => ({ poolId: p.id, teams: p.teams })), competitionId);
-      for (const standing of standings) {
-        await pb.collection('pool_standings').create(standing, { $autoCancel: false });
+      if (standings.length > 0) {
+        const { error: sErr } = await supabase.from('pool_standings').insert(standings);
+        if (sErr) throw sErr;
       }
 
       toast.success('Poules et matchs générés avec succès !');

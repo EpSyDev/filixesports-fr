@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const useMatches = () => {
   const [matches, setMatches] = useState([]);
@@ -10,11 +9,16 @@ export const useMatches = () => {
   const fetchMatches = async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('matches').getFullList({
-        sort: '-date',
-        expand: 'competition',
-        $autoCancel: false
-      });
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*, competition_data:competitions(id, name, type)')
+        .order('date', { ascending: false });
+      if (error) throw error;
+      // Normalise pour compatibilité avec les composants existants
+      const records = data.map(m => ({
+        ...m,
+        expand: m.competition_data ? { competition: m.competition_data } : {}
+      }));
       setMatches(records);
       setError(null);
     } catch (err) {
@@ -24,57 +28,28 @@ export const useMatches = () => {
     }
   };
 
-  useEffect(() => {
-    fetchMatches();
-  }, []);
+  useEffect(() => { fetchMatches(); }, []);
 
   const createMatch = async (data) => {
-    try {
-      const record = await pb.collection('matches').create(data, { $autoCancel: false });
-      await fetchMatches();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('matches').insert(data).select().single();
+    if (error) throw new Error(error.message);
+    await fetchMatches();
+    return record;
   };
 
   const updateMatch = async (id, data) => {
-    try {
-      const record = await pb.collection('matches').update(id, data, { $autoCancel: false });
-      await fetchMatches();
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('matches').update(data).eq('id', id).select().single();
+    if (error) throw new Error(error.message);
+    await fetchMatches();
+    return record;
   };
 
   const deleteMatch = async (id) => {
-    try {
-      // First, fetch and delete ALL associated player_stats for this match
-      const stats = await pb.collection('player_stats').getList(1, 500, {
-        filter: `matchId="${id}"`,
-        $autoCancel: false
-      });
-      
-      for (const stat of stats.items) {
-        await pb.collection('player_stats').delete(stat.id, { $autoCancel: false });
-      }
-
-      // Then delete the match itself
-      await pb.collection('matches').delete(id, { $autoCancel: false });
-      await fetchMatches();
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    // La FK ON DELETE CASCADE supprime les player_stats automatiquement
+    const { error } = await supabase.from('matches').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    await fetchMatches();
   };
 
-  return {
-    matches,
-    loading,
-    error,
-    createMatch,
-    updateMatch,
-    deleteMatch,
-    refetch: fetchMatches
-  };
+  return { matches, loading, error, createMatch, updateMatch, deleteMatch, refetch: fetchMatches };
 };

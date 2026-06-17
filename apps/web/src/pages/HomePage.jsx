@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -19,27 +19,24 @@ const TournamentSummary = ({ competition }) => {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await pb.collection('tournament_teams').getFullList({
-          filter: `competitionId="${competition.id}"`,
-          $autoCancel: false
-        });
-        setTeams(res);
+        const { data, error } = await supabase.from('tournament_teams').select('*').eq('competitionId', competition.id);
+        if (error) throw error;
+        setTeams(data);
       } catch (err) {
-        console.error("Failed to fetch teams", err);
+        console.error('Failed to fetch teams', err);
       }
     };
-    
+
     fetchTeams();
-    
-    pb.collection('tournament_teams').subscribe('*', function(e) {
-      if (e.record.competitionId === competition.id) {
-        fetchTeams();
-      }
-    });
-    
-    return () => {
-      pb.collection('tournament_teams').unsubscribe('*');
-    };
+
+    const channel = supabase.channel(`home-tournament-${competition.id}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'tournament_teams',
+        filter: `competitionId=eq.${competition.id}`
+      }, fetchTeams)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [competition.id]);
   
   return (

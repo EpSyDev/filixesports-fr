@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import pb from '@/lib/pocketbaseClient';
+import supabase from '@/lib/supabaseClient';
 
 export const useCompetitions = () => {
   const [competitions, setCompetitions] = useState([]);
@@ -10,14 +9,11 @@ export const useCompetitions = () => {
   const fetchCompetitions = useCallback(async () => {
     try {
       setLoading(true);
-      const records = await pb.collection('competitions').getFullList({
-        sort: '-created',
-        $autoCancel: false
-      });
-      setCompetitions(records);
+      const { data, error } = await supabase.from('competitions').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setCompetitions(data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching competitions:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -27,66 +23,31 @@ export const useCompetitions = () => {
   useEffect(() => {
     fetchCompetitions();
 
-    const setupSubscription = async () => {
-      try {
-        await pb.collection('competitions').subscribe('*', function (e) {
-          if (e.action === 'create') {
-            setCompetitions(prev => {
-              const exists = prev.some(c => c.id === e.record.id);
-              if (exists) return prev;
-              return [e.record, ...prev].sort((a, b) => new Date(b.created) - new Date(a.created));
-            });
-          } else if (e.action === 'update') {
-            setCompetitions(prev => prev.map(c => c.id === e.record.id ? e.record : c));
-          } else if (e.action === 'delete') {
-            setCompetitions(prev => prev.filter(c => c.id !== e.record.id));
-          }
-        });
-      } catch (err) {
-        console.error("Failed to subscribe to competitions:", err);
-      }
-    };
+    const channel = supabase.channel('competitions-all')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'competitions' }, () => {
+        fetchCompetitions();
+      })
+      .subscribe();
 
-    setupSubscription();
-
-    return () => {
-      pb.collection('competitions').unsubscribe('*').catch(console.error);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [fetchCompetitions]);
 
   const createCompetition = async (data) => {
-    try {
-      const record = await pb.collection('competitions').create(data, { $autoCancel: false });
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('competitions').insert(data).select().single();
+    if (error) throw new Error(error.message);
+    return record;
   };
 
   const updateCompetition = async (id, data) => {
-    try {
-      const record = await pb.collection('competitions').update(id, data, { $autoCancel: false });
-      return record;
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { data: record, error } = await supabase.from('competitions').update(data).eq('id', id).select().single();
+    if (error) throw new Error(error.message);
+    return record;
   };
 
   const deleteCompetition = async (id) => {
-    try {
-      await pb.collection('competitions').delete(id, { $autoCancel: false });
-    } catch (err) {
-      throw new Error(err.message);
-    }
+    const { error } = await supabase.from('competitions').delete().eq('id', id);
+    if (error) throw new Error(error.message);
   };
 
-  return {
-    competitions,
-    loading,
-    error,
-    createCompetition,
-    updateCompetition,
-    deleteCompetition,
-    refetch: fetchCompetitions
-  };
+  return { competitions, loading, error, createCompetition, updateCompetition, deleteCompetition, refetch: fetchCompetitions };
 };

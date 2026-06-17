@@ -378,14 +378,13 @@ export const getKnockoutBracketStatus = (matches) => {
 
 export const isKnockoutMatchStarted = async (competitionId) => {
   try {
-    const pb = (await import('@/lib/pocketbaseClient')).default;
-    const matches = await pb.collection('knockout_matches').getFullList({
-      filter: `competitionId="${competitionId}" && status="played"`,
-      $autoCancel: false
-    });
-    return matches.length > 0;
+    const { default: supabase } = await import('@/lib/supabaseClient');
+    const { data, error } = await supabase.from('knockout_matches')
+      .select('id').eq('competitionId', competitionId).eq('status', 'played').limit(1);
+    if (error) throw error;
+    return data.length > 0;
   } catch (error) {
-    console.error("Error checking knockout match status:", error);
+    console.error('Error checking knockout match status:', error);
     return false;
   }
 };
