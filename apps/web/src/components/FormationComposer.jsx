@@ -188,56 +188,55 @@ const FormationComposer = ({ isReadOnly }) => {
           )}
         </div>
 
-        {/* Équipe adverse */}
-        <div className="flex items-center justify-between bg-red-950/40 border border-red-900/40 rounded-lg px-4 py-2 gap-3">
-          <input
-            type="text"
-            value={opponentName}
-            onChange={e => setOpponentName(e.target.value)}
-            placeholder="Nom de l'équipe..."
-            className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 outline-none min-w-0"
-          />
-          <Select value={opponentTactic} onValueChange={setOpponentTactic}>
-            <SelectTrigger className="w-32 h-9 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        {/* Sélecteurs des deux équipes */}
+        <div className="flex gap-3">
+          <div className="flex flex-1 items-center bg-primary/10 border border-primary/30 rounded-lg px-3 py-2 gap-2">
+            <input
+              type="text"
+              value={teamName}
+              onChange={e => setTeamName(e.target.value)}
+              placeholder="Équipe gauche..."
+              className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 outline-none min-w-0"
+            />
+            <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
+              <SelectTrigger className="w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-1 items-center bg-red-950/40 border border-red-900/40 rounded-lg px-3 py-2 gap-2">
+            <input
+              type="text"
+              value={opponentName}
+              onChange={e => setOpponentName(e.target.value)}
+              placeholder="Équipe droite..."
+              className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 outline-none min-w-0"
+            />
+            <Select value={opponentTactic} onValueChange={setOpponentTactic}>
+              <SelectTrigger className="w-28 h-8 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Terrain — adversaire en haut (miroir), notre équipe en bas */}
-        <div ref={fieldRef} className="w-full rounded-xl overflow-hidden flex flex-col">
-          <div className="rotate-180">
-            <FormationField composition={{}} onPlayerDrop={() => {}} onPlayerRemove={() => {}} isReadOnly tactic={opponentTactic} />
-          </div>
+        {/* Terrain unique — deux équipes face à face */}
+        <div ref={fieldRef} className="w-full rounded-xl overflow-hidden">
           <FormationField
             composition={composition}
             onPlayerDrop={handlePlayerDrop}
             onPlayerRemove={handlePlayerRemove}
             isReadOnly={isReadOnly}
             tactic={teamTactic}
+            opponentTactic={opponentTactic}
           />
-        </div>
-
-        {/* Notre équipe */}
-        <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-4 py-2 gap-3">
-          <input
-            type="text"
-            value={teamName}
-            onChange={e => setTeamName(e.target.value)}
-            placeholder="Nom de l'équipe..."
-            className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 outline-none min-w-0"
-          />
-          <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
-            <SelectTrigger className="w-32 h-9 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
         </div>
 
       </div>
