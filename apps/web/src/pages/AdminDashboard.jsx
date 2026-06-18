@@ -316,7 +316,7 @@ const AdminDashboard = () => {
                               <img
                                 src={playerForm.image instanceof File ? URL.createObjectURL(playerForm.image) : playerForm.image}
                                 alt="Aperçu"
-                                className="w-16 h-16 rounded-full object-cover border shrink-0"
+                                className="w-16 h-16 rounded-full object-cover object-top border shrink-0"
                               />
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
@@ -359,7 +359,7 @@ const AdminDashboard = () => {
                           <div key={p.id} onClick={() => handleEditPlayer(p)} className={`flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors ${playerForm.id === p.id ? 'bg-primary/10 border-primary/40' : 'bg-muted/30 hover:bg-muted/60'}`}>
                             <div className="flex items-center gap-3 min-w-0">
                               {p.image ? (
-                                <img src={p.image} alt={p.name} className="w-11 h-11 rounded-full object-cover border shrink-0" />
+                                <img src={p.image} alt={p.name} className="w-11 h-11 rounded-full object-cover object-top border shrink-0" />
                               ) : (
                                 <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">{p.number}</div>
                               )}

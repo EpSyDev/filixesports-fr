@@ -16,7 +16,7 @@ const PlayerCard = ({ player, stats }) => {
               src={photoUrl}
               alt={player.name}
               loading="lazy"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
