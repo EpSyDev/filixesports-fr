@@ -5,7 +5,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PlayerCard = ({ player, stats }) => {
-  const photoUrl = player.photo || null;
+  const photoUrl = player.image || player.photo || null;
 
   return (
     <Card className="bg-card border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
