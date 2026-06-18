@@ -17,7 +17,7 @@ import MediaUpload from '@/components/MediaUpload';
 import MatchPlayerStats from '@/components/MatchPlayerStats';
 import CompetitionManagement from '@/components/CompetitionManagement';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Upload, X } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { matches, createMatch, updateMatch, deleteMatch } = useMatches();
@@ -32,7 +32,7 @@ const AdminDashboard = () => {
   });
 
   const [playerForm, setPlayerForm] = useState({
-    id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none'
+    id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: ''
   });
 
   const [trophyForm, setTrophyForm] = useState({
@@ -99,13 +99,14 @@ const AdminDashboard = () => {
   const handlePlayerSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = { 
-        name: playerForm.name, 
-        number: Number(playerForm.number), 
+      const data = {
+        name: playerForm.name,
+        number: Number(playerForm.number),
         position: playerForm.position,
-        secondaryPosition: playerForm.secondaryPosition === 'none' ? '' : playerForm.secondaryPosition
+        secondaryPosition: playerForm.secondaryPosition === 'none' ? '' : playerForm.secondaryPosition,
+        image: playerForm.image
       };
-      
+
       if (playerForm.id) {
         await updatePlayer(playerForm.id, data);
         toast.success('Joueur mis à jour');
@@ -113,7 +114,7 @@ const AdminDashboard = () => {
         await createPlayer(data);
         toast.success('Joueur créé');
       }
-      setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none' });
+      handleNewPlayer();
     } catch (error) {
       toast.error(`Erreur enregistrement joueur: ${error.message || ''}`);
     }
@@ -138,12 +139,24 @@ const AdminDashboard = () => {
       name: p.name || '',
       number: p.number ?? '',
       position: p.position || 'GB',
-      secondaryPosition: p.secondaryPosition || 'none'
+      secondaryPosition: p.secondaryPosition || 'none',
+      image: p.image || ''
     });
   };
 
   const handleNewPlayer = () => {
-    setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none' });
+    setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: '' });
+  };
+
+  const handlePlayerImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/webp') {
+      toast.error('Format non supporté : image WebP (.webp) uniquement');
+      e.target.value = '';
+      return;
+    }
+    setPlayerForm(p => ({ ...p, image: file }));
   };
 
   const handleTrophySubmit = async (e) => {
@@ -296,6 +309,35 @@ const AdminDashboard = () => {
                           </div>
                         </div>
 
+                        <div className="space-y-1">
+                          <Label>Photo (WebP uniquement)</Label>
+                          <div className="flex items-center gap-4">
+                            {playerForm.image ? (
+                              <img
+                                src={playerForm.image instanceof File ? URL.createObjectURL(playerForm.image) : playerForm.image}
+                                alt="Aperçu"
+                                className="w-16 h-16 rounded-full object-cover border shrink-0"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                                <Upload className="w-5 h-5" />
+                              </div>
+                            )}
+                            <div className="flex-1 space-y-2">
+                              <label htmlFor="player-image" className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary transition-colors bg-muted/50 text-sm text-muted-foreground min-h-[44px]">
+                                <Upload className="w-4 h-4" />
+                                {playerForm.image instanceof File ? playerForm.image.name : (playerForm.image ? 'Changer la photo' : 'Sélectionner un .webp')}
+                              </label>
+                              <input id="player-image" type="file" accept="image/webp,.webp" onChange={handlePlayerImageChange} className="hidden" />
+                              {playerForm.image && (
+                                <button type="button" onClick={() => setPlayerForm(p => ({ ...p, image: '' }))} className="text-xs text-destructive hover:underline flex items-center gap-1">
+                                  <X className="w-3 h-3" /> Retirer la photo
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
                         <Button type="submit" className="w-full transition-all duration-200 active:scale-[0.98] min-h-[44px] mt-2">
                           {playerForm.id ? 'Mettre à jour' : 'Sauvegarder'}
                         </Button>
@@ -315,11 +357,18 @@ const AdminDashboard = () => {
                       ) : (
                         players.map(p=>(
                           <div key={p.id} onClick={() => handleEditPlayer(p)} className={`flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors ${playerForm.id === p.id ? 'bg-primary/10 border-primary/40' : 'bg-muted/30 hover:bg-muted/60'}`}>
-                            <div className="flex flex-col">
-                              <span className="font-bold">{p.number} - {p.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {p.position} {p.secondaryPosition && ` / ${p.secondaryPosition}`}
-                              </span>
+                            <div className="flex items-center gap-3 min-w-0">
+                              {p.image ? (
+                                <img src={p.image} alt={p.name} className="w-11 h-11 rounded-full object-cover border shrink-0" />
+                              ) : (
+                                <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">{p.number}</div>
+                              )}
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold truncate">{p.number} - {p.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {p.position} {p.secondaryPosition && ` / ${p.secondaryPosition}`}
+                                </span>
+                              </div>
                             </div>
                             <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px] min-w-[44px]" onClick={(e) => { e.stopPropagation(); handleDeletePlayer(p.id); }}>
                               <Trash2 className="w-5 h-5"/>
