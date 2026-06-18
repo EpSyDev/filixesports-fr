@@ -56,7 +56,8 @@ const CompetitionTeamsManager = ({ competitionId }) => {
       }
       resetForm();
     } catch (err) {
-      toast.error('Erreur lors de l\'enregistrement de l\'équipe.');
+      console.error('league_teams save error', err);
+      toast.error(`Erreur lors de l'enregistrement : ${err.message || err.details || 'erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
