@@ -123,12 +123,27 @@ const AdminDashboard = () => {
     if (window.confirm('Supprimer ce joueur ?')) {
       try {
         await deletePlayer(id);
+        if (playerForm.id === id) handleNewPlayer();
         toast.success('Joueur supprimé avec succès');
       } catch (error) {
         console.error("Delete player failed:", error);
         toast.error(`Échec de la suppression: ${error.message || 'Erreur inconnue'}`);
       }
     }
+  };
+
+  const handleEditPlayer = (p) => {
+    setPlayerForm({
+      id: p.id,
+      name: p.name || '',
+      number: p.number ?? '',
+      position: p.position || 'GB',
+      secondaryPosition: p.secondaryPosition || 'none'
+    });
+  };
+
+  const handleNewPlayer = () => {
+    setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none' });
   };
 
   const handleTrophySubmit = async (e) => {
@@ -233,7 +248,7 @@ const AdminDashboard = () => {
               <TabsContent value="players" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card className="shadow-sm border-border">
-                    <CardHeader><CardTitle>Nouveau joueur</CardTitle></CardHeader>
+                    <CardHeader><CardTitle>{playerForm.id ? 'Modifier le joueur' : 'Nouveau joueur'}</CardTitle></CardHeader>
                     <CardContent>
                       <form onSubmit={handlePlayerSubmit} className="space-y-5">
                         <div className="space-y-1">
@@ -282,8 +297,13 @@ const AdminDashboard = () => {
                         </div>
 
                         <Button type="submit" className="w-full transition-all duration-200 active:scale-[0.98] min-h-[44px] mt-2">
-                          Sauvegarder
+                          {playerForm.id ? 'Mettre à jour' : 'Sauvegarder'}
                         </Button>
+                        {playerForm.id && (
+                          <Button type="button" variant="outline" className="w-full transition-all duration-200 min-h-[44px]" onClick={handleNewPlayer}>
+                            Annuler
+                          </Button>
+                        )}
                       </form>
                     </CardContent>
                   </Card>
@@ -294,14 +314,14 @@ const AdminDashboard = () => {
                         <p className="text-muted-foreground text-center py-8">Aucun joueur enregistré.</p>
                       ) : (
                         players.map(p=>(
-                          <div key={p.id} className="flex justify-between items-center p-3 bg-muted/30 border rounded-lg hover:bg-muted/60 transition-colors">
+                          <div key={p.id} onClick={() => handleEditPlayer(p)} className={`flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-colors ${playerForm.id === p.id ? 'bg-primary/10 border-primary/40' : 'bg-muted/30 hover:bg-muted/60'}`}>
                             <div className="flex flex-col">
                               <span className="font-bold">{p.number} - {p.name}</span>
                               <span className="text-xs text-muted-foreground">
                                 {p.position} {p.secondaryPosition && ` / ${p.secondaryPosition}`}
                               </span>
                             </div>
-                            <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px] min-w-[44px]" onClick={() => handleDeletePlayer(p.id)}>
+                            <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px] min-w-[44px]" onClick={(e) => { e.stopPropagation(); handleDeletePlayer(p.id); }}>
                               <Trash2 className="w-5 h-5"/>
                             </Button>
                           </div>
