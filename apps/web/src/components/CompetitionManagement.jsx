@@ -85,7 +85,7 @@ const CompetitionManagement = () => {
       setCreateData({ name: '', season: new Date().getFullYear().toString(), type: 'LIGUE', status: 'draft', description: '' });
       setSelectedCompId(newComp.id);
     } catch (err) {
-      toast.error('Erreur lors de la création de la compétition');
+      toast.error(`Erreur lors de la création : ${err.message || 'erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -100,7 +100,7 @@ const CompetitionManagement = () => {
       if (error) throw error;
       toast.success('Paramètres mis à jour');
     } catch (err) {
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(`Erreur lors de la mise à jour : ${err.message || 'erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -163,7 +163,7 @@ const MatchPlayerStats = ({ matchId }) => {
       await Promise.all(promises.filter(Boolean));
       toast.success('Toutes les statistiques ont été enregistrées avec succès');
     } catch (err) {
-      toast.error('Erreur lors de l\'enregistrement des statistiques');
+      toast.error(`Erreur lors de l'enregistrement des statistiques : ${err.message || 'erreur inconnue'}`);
     } finally {
       setSaving(false);
     }
