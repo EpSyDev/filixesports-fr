@@ -18,8 +18,8 @@ const PlayerCard = ({ player, stats }) => {
               alt={player.name}
               loading="lazy"
               className={cn(
-                'w-full h-full object-cover object-top transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
-                backUrl && 'group-hover:opacity-0 group-hover:scale-105'
+                'w-full h-full object-cover object-top transition-opacity duration-300',
+                backUrl && 'group-hover:opacity-0'
               )}
             />
           ) : (
@@ -32,7 +32,7 @@ const PlayerCard = ({ player, stats }) => {
               src={backUrl}
               alt={`${player.name} (dos)`}
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover object-top opacity-0 scale-90 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:opacity-100 group-hover:scale-100"
+              className="absolute inset-0 w-full h-full object-cover object-top opacity-0 group-hover:animate-card-bounce-in"
             />
           )}
           <div className="absolute top-3 right-3 bg-primary text-primary-foreground w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-md">
