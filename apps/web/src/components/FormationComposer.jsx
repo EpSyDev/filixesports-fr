@@ -221,7 +221,7 @@ const FormationComposer = ({ isReadOnly }) => {
 
         {/* Terrain */}
         <div className="flex justify-center">
-          <div ref={fieldRef} className="w-full max-w-[460px] rounded-xl overflow-hidden shadow-2xl">
+          <div ref={fieldRef} className="w-full max-w-[560px] rounded-xl overflow-hidden shadow-2xl">
             <FormationField
               composition={composition}
               onPlayerDrop={handlePlayerDrop}
