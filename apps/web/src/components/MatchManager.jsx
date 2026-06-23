@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2, CalendarDays, Loader2, Sparkles } from 'lucide-react';
 import InlineMatchScoreInput from './InlineMatchScoreInput.jsx';
 import { generateRoundRobinMatches, calculateLeagueStandings } from '@/utils/competitionUtils';
+import { cn } from '@/lib/utils';
 
 const MatchManager = ({ competitionId }) => {
   const [teams, setTeams] = useState([]);
@@ -290,7 +291,7 @@ const MatchManager = ({ competitionId }) => {
             Aucun match n'a encore été créé pour cette compétition. Générez un calendrier ou ajoutez-en manuellement.
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {Object.entries(
               matches.reduce((acc, match) => {
                 const day = match.matchday || 1;
@@ -299,23 +300,44 @@ const MatchManager = ({ competitionId }) => {
               }, {})
             )
               .sort((a, b) => Number(a[0]) - Number(b[0]))
-              .map(([day, dayMatches]) => (
-                <div key={day} className="space-y-4">
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground border-b pb-2">
-                    Journée {day}
-                  </h4>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {dayMatches.map(match => (
-                      <InlineMatchScoreInput
-                        key={match.id}
-                        match={match}
-                        onSave={handleUpdateMatch}
-                        onDelete={handleDeleteMatch}
-                      />
-                    ))}
+              .map(([day, dayMatches]) => {
+                const playedCount = dayMatches.filter(m => m.status === 'played').length;
+                const total = dayMatches.length;
+                const complete = playedCount === total;
+                return (
+                  <div key={day} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground font-black text-lg shadow-sm shrink-0">
+                          {day}
+                        </div>
+                        <div className="leading-tight">
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-foreground">Journée {day}</h4>
+                          <p className="text-xs text-muted-foreground">{total} match{total > 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <span className={cn(
+                        'flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border',
+                        complete
+                          ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                          : 'bg-muted text-muted-foreground border-border'
+                      )}>
+                        {playedCount}/{total} joué{playedCount > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 sm:p-5">
+                      {dayMatches.map(match => (
+                        <InlineMatchScoreInput
+                          key={match.id}
+                          match={match}
+                          onSave={handleUpdateMatch}
+                          onDelete={handleDeleteMatch}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         )}
       </div>
