@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2, CheckCircle2 } from 'lucide-react';
+import ClubBadge from './ClubBadge';
 
 const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
   const [homeScore, setHomeScore] = useState('');
@@ -70,9 +71,9 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
     <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 border rounded-xl transition-all shadow-sm relative overflow-hidden ${isPlayed ? 'bg-primary/5 border-primary/30' : 'bg-muted/20 border-border/60 hover:bg-muted/40 hover:border-border'}`}>
       {isPlayed && <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
       <div className="flex-1 w-full sm:w-auto font-medium text-foreground truncate flex items-center">
-        <span className="truncate" title={match.homeTeam}>{match.homeTeam}</span>
+        <ClubBadge teamName={match.homeTeam} className="truncate" />
         <span className="text-muted-foreground text-xs font-normal mx-3 shrink-0">vs</span>
-        <span className="truncate text-right sm:text-left" title={match.awayTeam}>{match.awayTeam}</span>
+        <ClubBadge teamName={match.awayTeam} className="truncate text-right sm:text-left" />
       </div>
 
       <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">

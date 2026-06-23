@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Shield } from 'lucide-react';
 import { isOurClub } from '@/utils/identifyOurClub';
 import { cleanTeamName } from '@/utils/competitionUtils';
 import { cn } from '@/lib/utils';
@@ -11,8 +10,14 @@ const ClubBadge = ({ teamName, className, showIcon = true }) => {
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
-      {isOurs && showIcon && <Shield className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />}
-      <span 
+      {isOurs && showIcon && (
+        <img
+          src="/logo.png"
+          alt="FILIX"
+          className="w-5 h-5 rounded-full object-contain shrink-0 ring-1 ring-blue-500/30"
+        />
+      )}
+      <span
         className={cn(
           "truncate",
           isOurs && "font-bold text-blue-700 dark:text-blue-400"

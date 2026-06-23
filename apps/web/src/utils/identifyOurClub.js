@@ -1,5 +1,5 @@
 
 export const isOurClub = (teamName) => {
   if (!teamName) return false;
-  return teamName.trim().toLowerCase() === 'filix';
+  return /\bfilix\b/i.test(teamName);
 };
