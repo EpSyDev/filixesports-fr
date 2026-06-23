@@ -67,6 +67,7 @@ const playerPhoto = (player) => player?.image || player?.photo || null;
 const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly, selectedPlayer, onSlotTap }) => {
   const isTapTarget = !isReadOnly && selectedPlayer && !player;
   const photo = playerPhoto(player);
+  const depthStyle = { transform: `scale(${position.scale ?? 1})` };
   return (
     <div
       className={cn(
@@ -82,7 +83,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
       onClick={!isReadOnly && selectedPlayer ? () => onSlotTap(position.id) : undefined}
     >
       {player ? (
-        <div className="relative flex flex-col items-center justify-center w-full">
+        <div className="relative flex flex-col items-center justify-center w-full" style={depthStyle}>
           {!isReadOnly && (
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(position.id); }}
@@ -93,7 +94,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
           )}
           <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full border-2 border-white/90 bg-muted overflow-hidden shadow-lg ring-2 ring-black/30">
             {photo ? (
-              <img src={photo} alt={player.name} loading="lazy" className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
+              <img src={photo} alt={player.name} loading="lazy" className="w-full h-full object-cover object-top scale-[1.6] origin-top" crossOrigin="anonymous" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-300">
                 <User className="w-5 h-5 md:w-7 md:h-7" />
@@ -108,7 +109,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
           </div>
         </div>
       ) : (
-        <span className="font-bold text-[9px] md:text-[10px] tracking-wider text-white/60">
+        <span className="font-bold text-[9px] md:text-[10px] tracking-wider text-white/60" style={depthStyle}>
           {position.label}
         </span>
       )}
@@ -119,7 +120,18 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
 const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2', teamName, selectedPlayer }) => {
   const [activeSlot, setActiveSlot] = useState(null);
 
-  const positions = FORMATIONS[tactic] || FORMATIONS['3-5-2'];
+  const rawPositions = FORMATIONS[tactic] || FORMATIONS['3-5-2'];
+
+  // Perspective 2D : le haut (loin) est resserré et réduit, le bas (près) écarté et agrandi.
+  const MAX_DEPTH = 83; // top% de la ligne d'attaque
+  const positions = rawPositions.map((pos) => {
+    const top = parseFloat(pos.top);
+    const left = parseFloat(pos.left);
+    const d = Math.min(top / MAX_DEPTH, 1);          // 0 = loin (haut), 1 = près (bas)
+    const spread = 0.52 + 0.48 * d;                  // compression horizontale vers le centre
+    const scale = 0.72 + 0.5 * d;                    // taille selon la profondeur
+    return { ...pos, left: `${50 + (left - 50) * spread}%`, scale };
+  });
 
   const handleDragOver = (e, positionId) => {
     if (isReadOnly) return;
@@ -162,12 +174,30 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
         </h2>
       </div>
 
-      {/* Terrain vertical */}
+      {/* Demi-terrain vertical en perspective : but FILIX en haut, ligne médiane en bas */}
       <div className="football-pitch">
-        <div className="pitch-line pitch-center-line z-0" />
-        <div className="pitch-line pitch-center-circle z-0" />
-        <div className="pitch-line pitch-penalty-top z-0" />
-        <div className="pitch-line pitch-penalty-bottom z-0" />
+        <svg
+          className="absolute inset-0 w-full h-full z-0 pointer-events-none"
+          viewBox="0 0 300 400"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(255,255,255,0.45)"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        >
+          {/* Limites du terrain (trapèze) */}
+          <path d="M78,12 L222,12 L297,388 L3,388 Z" />
+          {/* Surface de réparation */}
+          <path d="M105,12 L93,96 L207,96 L195,12" />
+          {/* But (6 m) */}
+          <path d="M129,12 L123,46 L177,46 L171,12" />
+          {/* Arc de la surface (« D ») */}
+          <path d="M131,96 Q150,124 169,96" />
+          {/* Rond central posé sur la ligne médiane */}
+          <ellipse cx="150" cy="388" rx="52" ry="22" />
+          {/* Point de penalty */}
+          <circle cx="150" cy="74" r="2" fill="rgba(255,255,255,0.45)" stroke="none" />
+        </svg>
 
         {positions.map((pos) => (
           <PlayerSlot

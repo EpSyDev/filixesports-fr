@@ -147,7 +147,7 @@ html {
     margin: 0 auto;
   }
 
-  /* Terrain vertical (gardien en haut, attaque en bas) */
+  /* Demi-terrain vertical (but FILIX en haut, ligne médiane en bas) */
   .football-pitch {
     @apply relative w-full overflow-hidden;
     background-color: hsl(var(--pitch-bg));
@@ -155,34 +155,33 @@ html {
     margin: 0 auto;
   }
 
+  /* Stries de pelouse plus serrées en haut (loin) → effet de profondeur */
   .football-pitch::before {
     content: '';
-    @apply absolute inset-0 opacity-10 pointer-events-none;
-    background-image: repeating-linear-gradient(0deg, transparent, transparent 10%, #000 10%, #000 20%);
-  }
-
-  .pitch-line {
-    @apply absolute border-2 pointer-events-none;
-    border-color: hsl(var(--pitch-lines) / 0.4);
-  }
-
-  /* Ligne médiane — horizontale */
-  .pitch-center-line {
-    @apply w-full border-t-2 top-1/2 left-0 -translate-y-1/2;
-  }
-
-  .pitch-center-circle {
-    @apply w-24 h-24 md:w-32 md:h-32 rounded-full border-2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
-  }
-
-  /* Surface de réparation haute */
-  .pitch-penalty-top {
-    @apply w-[50%] h-[14%] border-t-0 left-1/4 top-0;
-  }
-
-  /* Surface de réparation basse */
-  .pitch-penalty-bottom {
-    @apply w-[50%] h-[14%] border-b-0 left-1/4 bottom-0;
+    @apply absolute inset-0 opacity-[0.08] pointer-events-none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 6%,
+      #000 6%,
+      #000 12%,
+      transparent 12%,
+      transparent 19%,
+      #000 19%,
+      #000 27%,
+      transparent 27%,
+      transparent 36%,
+      #000 36%,
+      #000 46%,
+      transparent 46%,
+      transparent 58%,
+      #000 58%,
+      #000 72%,
+      transparent 72%,
+      transparent 88%,
+      #000 88%,
+      #000 100%
+    );
   }
 
   /* Drag and Drop Utilities */
