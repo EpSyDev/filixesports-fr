@@ -35,18 +35,18 @@ export const usePlayers = () => {
   };
 
   const createPlayer = async (data) => {
-    const { image, ...rest } = data;
-    const imageUrl = await resolvePlayerImage(image);
-    const { data: record, error } = await supabase.from('players').insert({ ...rest, image: imageUrl }).select().single();
+    const { image, imageBack, ...rest } = data;
+    const [imageUrl, imageBackUrl] = await Promise.all([resolvePlayerImage(image), resolvePlayerImage(imageBack)]);
+    const { data: record, error } = await supabase.from('players').insert({ ...rest, image: imageUrl, imageBack: imageBackUrl }).select().single();
     if (error) throw new Error(error?.message || 'Erreur lors de la création');
     await fetchPlayers();
     return record;
   };
 
   const updatePlayer = async (id, data) => {
-    const { image, ...rest } = data;
-    const imageUrl = await resolvePlayerImage(image);
-    const { data: record, error } = await supabase.from('players').update({ ...rest, image: imageUrl }).eq('id', id).select().single();
+    const { image, imageBack, ...rest } = data;
+    const [imageUrl, imageBackUrl] = await Promise.all([resolvePlayerImage(image), resolvePlayerImage(imageBack)]);
+    const { data: record, error } = await supabase.from('players').update({ ...rest, image: imageUrl, imageBack: imageBackUrl }).eq('id', id).select().single();
     if (error) throw new Error(error?.message || 'Erreur lors de la mise à jour');
     await fetchPlayers();
     return record;

@@ -32,7 +32,7 @@ const AdminDashboard = () => {
   });
 
   const [playerForm, setPlayerForm] = useState({
-    id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: ''
+    id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: '', imageBack: ''
   });
 
   const [trophyForm, setTrophyForm] = useState({
@@ -104,7 +104,8 @@ const AdminDashboard = () => {
         number: Number(playerForm.number),
         position: playerForm.position,
         secondaryPosition: playerForm.secondaryPosition === 'none' ? '' : playerForm.secondaryPosition,
-        image: playerForm.image
+        image: playerForm.image,
+        imageBack: playerForm.imageBack
       };
 
       if (playerForm.id) {
@@ -140,15 +141,16 @@ const AdminDashboard = () => {
       number: p.number ?? '',
       position: p.position || 'GB',
       secondaryPosition: p.secondaryPosition || 'none',
-      image: p.image || ''
+      image: p.image || '',
+      imageBack: p.imageBack || ''
     });
   };
 
   const handleNewPlayer = () => {
-    setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: '' });
+    setPlayerForm({ id: null, name: '', number: '', position: 'GB', secondaryPosition: 'none', image: '', imageBack: '' });
   };
 
-  const handlePlayerImageChange = (e) => {
+  const handlePlayerImageChange = (e, field = 'image') => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'image/webp') {
@@ -156,7 +158,7 @@ const AdminDashboard = () => {
       e.target.value = '';
       return;
     }
-    setPlayerForm(p => ({ ...p, image: file }));
+    setPlayerForm(p => ({ ...p, [field]: file }));
   };
 
   const handleTrophySubmit = async (e) => {
@@ -310,12 +312,12 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <Label>Photo (WebP uniquement)</Label>
+                          <Label>Photo de face (WebP uniquement)</Label>
                           <div className="flex items-center gap-4">
                             {playerForm.image ? (
                               <img
                                 src={playerForm.image instanceof File ? URL.createObjectURL(playerForm.image) : playerForm.image}
-                                alt="Aperçu"
+                                alt="Aperçu face"
                                 className="w-16 h-16 rounded-full object-cover object-top border shrink-0"
                               />
                             ) : (
@@ -331,6 +333,35 @@ const AdminDashboard = () => {
                               <input id="player-image" type="file" accept="image/webp,.webp" onChange={handlePlayerImageChange} className="hidden" />
                               {playerForm.image && (
                                 <button type="button" onClick={() => setPlayerForm(p => ({ ...p, image: '' }))} className="text-xs text-destructive hover:underline flex items-center gap-1">
+                                  <X className="w-3 h-3" /> Retirer la photo
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label>Photo de dos (apparaît au survol dans l'effectif)</Label>
+                          <div className="flex items-center gap-4">
+                            {playerForm.imageBack ? (
+                              <img
+                                src={playerForm.imageBack instanceof File ? URL.createObjectURL(playerForm.imageBack) : playerForm.imageBack}
+                                alt="Aperçu dos"
+                                className="w-16 h-16 rounded-full object-cover object-top border shrink-0"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                                <Upload className="w-5 h-5" />
+                              </div>
+                            )}
+                            <div className="flex-1 space-y-2">
+                              <label htmlFor="player-image-back" className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary transition-colors bg-muted/50 text-sm text-muted-foreground min-h-[44px]">
+                                <Upload className="w-4 h-4" />
+                                {playerForm.imageBack instanceof File ? playerForm.imageBack.name : (playerForm.imageBack ? 'Changer la photo' : 'Sélectionner un .webp')}
+                              </label>
+                              <input id="player-image-back" type="file" accept="image/webp,.webp" onChange={(e) => handlePlayerImageChange(e, 'imageBack')} className="hidden" />
+                              {playerForm.imageBack && (
+                                <button type="button" onClick={() => setPlayerForm(p => ({ ...p, imageBack: '' }))} className="text-xs text-destructive hover:underline flex items-center gap-1">
                                   <X className="w-3 h-3" /> Retirer la photo
                                 </button>
                               )}

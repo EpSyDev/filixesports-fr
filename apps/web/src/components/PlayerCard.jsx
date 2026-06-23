@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 
 const PlayerCard = ({ player, stats }) => {
   const photoUrl = player.image || player.photo || null;
+  const backUrl = player.imageBack || null;
 
   return (
     <Card className="bg-card border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
@@ -16,12 +17,23 @@ const PlayerCard = ({ player, stats }) => {
               src={photoUrl}
               alt={player.name}
               loading="lazy"
-              className="w-full h-full object-cover object-top"
+              className={cn(
+                'w-full h-full object-cover object-top transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+                backUrl && 'group-hover:opacity-0 group-hover:scale-105'
+              )}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <User className="w-24 h-24 text-muted-foreground/30" />
             </div>
+          )}
+          {backUrl && (
+            <img
+              src={backUrl}
+              alt={`${player.name} (dos)`}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover object-top opacity-0 scale-90 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:opacity-100 group-hover:scale-100"
+            />
           )}
           <div className="absolute top-3 right-3 bg-primary text-primary-foreground w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-md">
             {player.number}
