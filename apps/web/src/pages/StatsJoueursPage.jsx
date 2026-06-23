@@ -22,6 +22,7 @@ const COLUMNS = [
   { key: 'totalPasses',   label: 'Passes',    align: 'center', hide: 'hidden lg:table-cell' },
   { key: 'totalTackles',  label: 'Tacles',    align: 'center', hide: 'hidden lg:table-cell' },
   { key: 'averageRating', label: 'Note',      align: 'center', hide: '' },
+  { key: 'motm',          label: 'MOTM',      align: 'center', hide: 'hidden sm:table-cell' },
   { key: 'yellowCards',   label: 'CJ',        align: 'center', hide: 'hidden md:table-cell' },
   { key: 'redCards',      label: 'CR',        align: 'center', hide: 'hidden md:table-cell' },
 ];
@@ -122,6 +123,9 @@ const StatsJoueursPage = () => {
                         <TableCell className="text-center hidden lg:table-cell">{player.totalTackles}</TableCell>
                         <TableCell className="text-center font-bold text-yellow-500">
                           {player.averageRating > 0 ? player.averageRating.toFixed(1) : '-'}
+                        </TableCell>
+                        <TableCell className="text-center hidden sm:table-cell">
+                          {player.motm > 0 ? <span className="font-bold text-amber-500">🏆 {player.motm}</span> : '-'}
                         </TableCell>
                         <TableCell className="text-center hidden md:table-cell">{player.yellowCards}</TableCell>
                         <TableCell className="text-center hidden md:table-cell">{player.redCards}</TableCell>

@@ -10,7 +10,8 @@ export const calculatePlayerStats = (playerStats) => {
       totalMatches: 0,
       averageRating: 0,
       yellowCards: 0,
-      redCards: 0
+      redCards: 0,
+      motm: 0
     };
   }
 
@@ -33,9 +34,10 @@ export const calculatePlayerStats = (playerStats) => {
       matches: acc.matches + (hasPlayed(stat) ? 1 : 0),
       ratings: stat.rating ? [...acc.ratings, stat.rating] : acc.ratings,
       yellowCards: acc.yellowCards + (stat.yellowCards || 0),
-      redCards: acc.redCards + (stat.redCards || 0)
+      redCards: acc.redCards + (stat.redCards || 0),
+      motm: acc.motm + ((stat.notes || '').includes('MOTM') ? 1 : 0)
     };
-  }, { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, matches: 0, ratings: [], yellowCards: 0, redCards: 0 });
+  }, { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, matches: 0, ratings: [], yellowCards: 0, redCards: 0, motm: 0 });
 
   const averageRating = totals.ratings.length > 0
     ? totals.ratings.reduce((sum, r) => sum + r, 0) / totals.ratings.length
@@ -50,7 +52,8 @@ export const calculatePlayerStats = (playerStats) => {
     totalMatches: totals.matches,
     averageRating: parseFloat(averageRating.toFixed(1)),
     yellowCards: totals.yellowCards,
-    redCards: totals.redCards
+    redCards: totals.redCards,
+    motm: totals.motm
   };
 };
 
