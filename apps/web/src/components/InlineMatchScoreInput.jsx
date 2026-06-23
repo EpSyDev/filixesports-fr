@@ -17,12 +17,25 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
     setAwayScore(match.awayScore !== null && match.awayScore !== undefined ? String(match.awayScore) : '');
   }, [match]);
 
-  const handleBlur = async () => {
+  const handleBlur = async (e) => {
+    // Si le focus reste dans la zone de saisie (passage d'un champ à l'autre),
+    // on ne sauvegarde pas encore : on attend que les deux scores soient saisis.
+    if (e?.currentTarget?.parentNode?.contains(e.relatedTarget)) {
+      return;
+    }
+
     const originalHome = match.homeScore !== null && match.homeScore !== undefined ? String(match.homeScore) : '';
     const originalAway = match.awayScore !== null && match.awayScore !== undefined ? String(match.awayScore) : '';
 
     // Only save if values actually changed
     if (homeScore === originalHome && awayScore === originalAway) {
+      return;
+    }
+
+    // Un seul score renseigné = saisie incomplète : on ne sauvegarde pas
+    // (sinon le match repasse en "scheduled" et le champ saisi serait effacé).
+    const oneFilled = (homeScore !== '') !== (awayScore !== '');
+    if (oneFilled) {
       return;
     }
 
@@ -51,16 +64,19 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
     }
   };
 
+  const isPlayed = match.status === 'played';
+
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-muted/20 border border-border/60 rounded-xl hover:bg-muted/40 hover:border-border transition-all shadow-sm relative overflow-hidden">
+    <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 border rounded-xl transition-all shadow-sm relative overflow-hidden ${isPlayed ? 'bg-primary/5 border-primary/30' : 'bg-muted/20 border-border/60 hover:bg-muted/40 hover:border-border'}`}>
+      {isPlayed && <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
       <div className="flex-1 w-full sm:w-auto font-medium text-foreground truncate flex items-center">
         <span className="truncate" title={match.homeTeam}>{match.homeTeam}</span>
         <span className="text-muted-foreground text-xs font-normal mx-3 shrink-0">vs</span>
         <span className="truncate text-right sm:text-left" title={match.awayTeam}>{match.awayTeam}</span>
       </div>
-      
+
       <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-        <div className="flex items-center gap-2 h-10 px-2 rounded-lg bg-background border shadow-sm focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+        <div className={`flex items-center gap-2 h-10 px-2 rounded-lg border shadow-sm focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all ${isPlayed ? 'bg-primary/10 border-primary/40' : 'bg-background'}`}>
           <Input
             type="number"
             min="0"
@@ -95,8 +111,12 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
               <CheckCircle2 className="w-4 h-4" />
               <span className="text-xs font-medium">Enregistré</span>
             </span>
+          ) : isPlayed ? (
+            <span className="flex items-center gap-1 text-primary text-xs font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Joué
+            </span>
           ) : (
-            <span className="text-muted-foreground/0 select-none text-xs">Prêt</span>
+            <span className="text-muted-foreground/40 select-none text-xs">À jouer</span>
           )}
         </div>
         

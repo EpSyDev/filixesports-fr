@@ -40,7 +40,7 @@ const MatchManager = ({ competitionId }) => {
     try {
       const [teamsRes, matchesRes, standingsRes] = await Promise.all([
         supabase.from('league_teams').select('*').eq('competitionId', competitionId).order('teamName', { ascending: true }),
-        supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('created_at', { ascending: false }),
+        supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('matchday', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('league_standings').select('*').eq('competitionId', competitionId).order('rank', { ascending: true })
       ]);
       if (teamsRes.error) throw teamsRes.error;
@@ -60,14 +60,19 @@ const MatchManager = ({ competitionId }) => {
   const updateStandingsInDb = async (newMatches) => {
     // Calculates updated standings array based on the new match results and teams
     const newStandingsData = calculateLeagueStandings(newMatches, teams);
-    
+
     await Promise.all(newStandingsData.map(ns => {
       const existingRec = standings.find(s => s.teamName === ns.teamName);
-      if (!existingRec) return Promise.resolve();
-      return supabase.from('league_standings').update({
+      const payload = {
         played: ns.played, won: ns.won, drawn: ns.drawn, lost: ns.lost,
         points: ns.points, goalsFor: ns.goalsFor, goalsAgainst: ns.goalsAgainst, rank: ns.rank
-      }).eq('id', existingRec.id);
+      };
+      // Crée la ligne de classement si elle n'existe pas encore (équipes ajoutées
+      // sans passer par la génération de calendrier), sinon la met à jour.
+      if (!existingRec) {
+        return supabase.from('league_standings').insert({ competitionId, teamName: ns.teamName, ...payload });
+      }
+      return supabase.from('league_standings').update(payload).eq('id', existingRec.id);
     }));
 
     const { data: refreshed } = await supabase.from('league_standings').select('*').eq('competitionId', competitionId).order('rank', { ascending: true });
@@ -130,7 +135,7 @@ const MatchManager = ({ competitionId }) => {
       const { data: createdMatches, error: insertErr } = await supabase.from('league_matches').insert(toInsert).select();
       if (insertErr) throw insertErr;
 
-      const { data: newMatchesRes } = await supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('created_at', { ascending: false });
+      const { data: newMatchesRes } = await supabase.from('league_matches').select('*').eq('competitionId', competitionId).order('matchday', { ascending: true }).order('created_at', { ascending: true });
       setMatches(newMatchesRes || []);
       
       setIsGenerateDialogOpen(false);
@@ -285,15 +290,32 @@ const MatchManager = ({ competitionId }) => {
             Aucun match n'a encore été créé pour cette compétition. Générez un calendrier ou ajoutez-en manuellement.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {matches.map(match => (
-              <InlineMatchScoreInput
-                key={match.id}
-                match={match}
-                onSave={handleUpdateMatch}
-                onDelete={handleDeleteMatch}
-              />
-            ))}
+          <div className="space-y-8">
+            {Object.entries(
+              matches.reduce((acc, match) => {
+                const day = match.matchday || 1;
+                (acc[day] = acc[day] || []).push(match);
+                return acc;
+              }, {})
+            )
+              .sort((a, b) => Number(a[0]) - Number(b[0]))
+              .map(([day, dayMatches]) => (
+                <div key={day} className="space-y-4">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground border-b pb-2">
+                    Journée {day}
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {dayMatches.map(match => (
+                      <InlineMatchScoreInput
+                        key={match.id}
+                        match={match}
+                        onSave={handleUpdateMatch}
+                        onDelete={handleDeleteMatch}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
           </div>
         )}
       </div>

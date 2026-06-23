@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,7 +8,40 @@ import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ClubBadge from '@/components/ClubBadge.jsx';
 
-const StandingsTable = ({ standings = [], loading = false }) => {
+const StandingsTable = ({ standings: standingsProp = [], loading: loadingProp = false, competitionId }) => {
+  // Mode autonome : quand un competitionId est fourni (dashboard Résultats),
+  // le composant récupère lui-même le classement et se met à jour en temps réel
+  // dès qu'un score / classement change.
+  const [fetched, setFetched] = useState([]);
+  const [fetching, setFetching] = useState(!!competitionId);
+
+  useEffect(() => {
+    if (!competitionId) return;
+
+    const load = async () => {
+      const { data } = await supabase
+        .from('league_standings')
+        .select('*')
+        .eq('competitionId', competitionId)
+        .order('rank', { ascending: true });
+      setFetched(data || []);
+      setFetching(false);
+    };
+    load();
+
+    const channel = supabase.channel(`standings-${competitionId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'league_standings',
+        filter: `competitionId=eq.${competitionId}`
+      }, load)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [competitionId]);
+
+  const standings = competitionId ? fetched : standingsProp;
+  const loading = competitionId ? fetching : loadingProp;
+
   if (loading) {
     return <Skeleton className="h-64 w-full rounded-xl" />;
   }
