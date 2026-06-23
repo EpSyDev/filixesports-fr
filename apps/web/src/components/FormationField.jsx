@@ -128,8 +128,8 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
     const top = parseFloat(pos.top);
     const left = parseFloat(pos.left);
     const d = Math.min(top / MAX_DEPTH, 1);          // 0 = loin (haut), 1 = près (bas)
-    const spread = 0.52 + 0.48 * d;                  // compression horizontale vers le centre
-    const scale = 0.72 + 0.5 * d;                    // taille selon la profondeur
+    const spread = 0.82 + 0.18 * d;                  // compression horizontale douce (défense reste large)
+    const scale = 0.88 + 0.22 * d;                   // taille presque constante, léger gain près du bas
     return { ...pos, left: `${50 + (left - 50) * spread}%`, scale };
   });
 
@@ -185,14 +185,14 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
           strokeWidth="2.5"
           strokeLinejoin="round"
         >
-          {/* Limites du terrain (trapèze) */}
-          <path d="M78,12 L222,12 L297,388 L3,388 Z" />
+          {/* Limites du terrain (trapèze doux) */}
+          <path d="M48,12 L252,12 L297,388 L3,388 Z" />
           {/* Surface de réparation */}
-          <path d="M105,12 L93,96 L207,96 L195,12" />
+          <path d="M96,12 L88,96 L212,96 L204,12" />
           {/* But (6 m) */}
-          <path d="M129,12 L123,46 L177,46 L171,12" />
+          <path d="M126,12 L122,46 L178,46 L174,12" />
           {/* Arc de la surface (« D ») */}
-          <path d="M131,96 Q150,124 169,96" />
+          <path d="M130,96 Q150,126 170,96" />
           {/* Rond central posé sur la ligne médiane */}
           <ellipse cx="150" cy="388" rx="52" ry="22" />
           {/* Point de penalty */}
