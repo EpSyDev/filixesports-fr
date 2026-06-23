@@ -14,6 +14,15 @@ export const calculatePlayerStats = (playerStats) => {
     };
   }
 
+  // Un match est compté comme joué dès qu'une note est saisie ou qu'une stat
+  // réelle existe — on ignore les lignes « fantômes » entièrement vides.
+  const hasPlayed = (stat) =>
+    (stat.rating != null && stat.rating !== '') ||
+    stat.goals > 0 || stat.assists > 0 || stat.shots > 0 ||
+    stat.passes > 0 || stat.tackles > 0 ||
+    stat.yellowCards > 0 || stat.redCards > 0 ||
+    (stat.notes || '').includes('MOTM');
+
   const totals = playerStats.reduce((acc, stat) => {
     return {
       goals: acc.goals + (stat.goals || 0),
@@ -21,7 +30,7 @@ export const calculatePlayerStats = (playerStats) => {
       shots: acc.shots + (stat.shots || 0),
       passes: acc.passes + (stat.passes || 0),
       tackles: acc.tackles + (stat.tackles || 0),
-      matches: acc.matches + 1,
+      matches: acc.matches + (hasPlayed(stat) ? 1 : 0),
       ratings: stat.rating ? [...acc.ratings, stat.rating] : acc.ratings,
       yellowCards: acc.yellowCards + (stat.yellowCards || 0),
       redCards: acc.redCards + (stat.redCards || 0)
