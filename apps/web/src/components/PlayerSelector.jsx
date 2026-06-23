@@ -51,12 +51,12 @@ const PlayerSelector = ({ players, availablePlayerIds, onDragStart, selectedPlay
               )}
             >
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-border">
-                {player.photo ? (
+                {(player.image || player.photo) ? (
                   <img
-                    src={player.photo}
+                    src={player.image || player.photo}
                     alt={player.name}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 ) : (
                   <User className="w-5 h-5 text-muted-foreground" />

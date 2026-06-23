@@ -15,8 +15,6 @@ const FormationComposer = ({ isReadOnly }) => {
 
   const [teamTactic, setTeamTactic] = useState('3-5-2');
   const [teamName, setTeamName] = useState('');
-  const [opponentTactic, setOpponentTactic] = useState('4-3-3');
-  const [opponentName, setOpponentName] = useState('');
   const [composition, setComposition] = useState({});
   const [selectedFormationId, setSelectedFormationId] = useState('new');
   const [isSaving, setIsSaving] = useState(false);
@@ -160,7 +158,7 @@ const FormationComposer = ({ isReadOnly }) => {
     const toastId = toast.loading('Génération de l\'image...');
     try {
       const canvas = await html2canvas(fieldRef.current, {
-        useCORS: true, allowTaint: true, backgroundColor: '#1a3b1a', scale: 2,
+        useCORS: true, allowTaint: true, backgroundColor: '#0f172a', scale: 2,
       });
       const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
@@ -201,55 +199,36 @@ const FormationComposer = ({ isReadOnly }) => {
           )}
         </div>
 
-        {/* Sélecteurs des deux équipes — empilés sur mobile */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex flex-1 items-center bg-primary/10 border border-primary/30 rounded-lg px-3 py-2 gap-2">
-            <input
-              type="text"
-              value={teamName}
-              onChange={e => setTeamName(e.target.value)}
-              placeholder="Équipe bleue..."
-              className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-sm min-w-0"
-            />
-            <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
-              <SelectTrigger className="w-24 sm:w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-1 items-center bg-red-950/40 border border-red-900/40 rounded-lg px-3 py-2 gap-2">
-            <input
-              type="text"
-              value={opponentName}
-              onChange={e => setOpponentName(e.target.value)}
-              placeholder="Équipe rouge..."
-              className="flex-1 bg-transparent text-sm font-bold text-red-300 placeholder:text-red-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400/50 rounded-sm min-w-0"
-            />
-            <Select value={opponentTactic} onValueChange={setOpponentTactic}>
-              <SelectTrigger className="w-24 sm:w-28 h-8 bg-red-950/60 border-red-800/60 text-red-200 text-sm shrink-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Sélecteur de l'équipe FILIX (domicile) */}
+        <div className="flex items-center bg-primary/10 border border-primary/30 rounded-lg px-3 py-2 gap-2">
+          <img src="/logo.png" alt="FILIX" className="w-6 h-6 object-contain shrink-0" />
+          <input
+            type="text"
+            value={teamName}
+            onChange={e => setTeamName(e.target.value)}
+            placeholder="FILIX"
+            className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-sm min-w-0"
+          />
+          <Select value={teamTactic} onValueChange={handleTeamTacticChange}>
+            <SelectTrigger className="w-24 sm:w-28 h-8 bg-primary/10 border-primary/30 text-primary text-sm shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TACTIC_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Terrain */}
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div ref={fieldRef} className="min-w-[520px] w-full rounded-xl overflow-hidden">
+        <div className="flex justify-center">
+          <div ref={fieldRef} className="w-full max-w-[460px] rounded-xl overflow-hidden shadow-2xl">
             <FormationField
               composition={composition}
               onPlayerDrop={handlePlayerDrop}
               onPlayerRemove={handlePlayerRemove}
               isReadOnly={isReadOnly}
               tactic={teamTactic}
-              opponentTactic={opponentTactic}
+              teamName={teamName}
               selectedPlayer={selectedPlayer}
             />
           </div>
