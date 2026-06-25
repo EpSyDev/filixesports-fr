@@ -16,7 +16,7 @@ import ClubBadge from './ClubBadge';
 import { useCompetitionLock } from '@/hooks/useCompetitionLock';
 import { calculatePoolStandings } from '@/utils/competitionUtils';
 import { toast } from 'sonner';
-import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock } from 'lucide-react';
+import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock, CheckSquare, Square, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TournamentManager = ({ competition }) => {
@@ -78,7 +78,11 @@ const TournamentManager = ({ competition }) => {
 
   const handleToggleLock = async () => {
     try {
-      await toggleLock();
+      const newState = await toggleLock();
+      // Après verrouillage, naviguer directement vers la phase finale
+      if (newState && knockoutMatches.length === 0) {
+        setActiveTab('knockout');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -251,17 +255,12 @@ const TournamentManager = ({ competition }) => {
             </CardTitle>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">Saison {competition.season || 'N/A'}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <Button
-              variant={isLocked ? "destructive" : "outline"}
-              size="sm"
-              onClick={handleToggleLock}
-              disabled={lockLoading}
-              className={cn("gap-2 transition-colors min-h-[44px] flex-1 sm:flex-none", !isLocked && "text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10")}
-            >
-              {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              {isLocked ? "Sélections Verrouillées" : "Sélections Ouvertes"}
-            </Button>
+          <div className="flex items-center gap-3">
+            {isLocked && (
+              <Badge variant="secondary" className="gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 py-1 px-3">
+                <Lock className="w-3 h-3" /> Bracket verrouillé
+              </Badge>
+            )}
             <Badge variant="default" className="bg-accent hover:bg-accent/80 text-sm px-4 py-1">TOURNOI</Badge>
           </div>
         </CardHeader>
@@ -385,41 +384,77 @@ const TournamentManager = ({ competition }) => {
               <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="text-xl font-bold text-foreground">Phase de Poules</h3>
-                  {allPoolMatchesPlayed && knockoutMatches.length === 0 && (
-                    <Button
-                      size="sm"
-                      onClick={handleToggleLock}
-                      disabled={lockLoading}
-                      className="gap-2 animate-pulse bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto min-h-[44px]"
-                    >
-                      Verrouiller les sélections <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
 
-                <div className="bg-card border rounded-xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-1">
-                    <h4 className="font-semibold">Sélection des qualifiés</h4>
-                    <p className="text-sm text-muted-foreground">Cliquez sur une équipe dans le classement pour la sélectionner pour la phase finale.</p>
-                  </div>
-
-                  <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                    <div className="text-sm font-medium">
-                      <span className={cn(qualifiedTeams.length >= 2 ? "text-emerald-600" : "text-primary")}>
-                        {qualifiedTeams.length}
-                      </span>{' '}équipe{qualifiedTeams.length > 1 ? 's' : ''} sélectionnée{qualifiedTeams.length > 1 ? 's' : ''}
+                {/* Bandeau de sélection / CTA Phase Finale */}
+                {!isLocked && knockoutMatches.length === 0 && (
+                  <div className={cn(
+                    "rounded-xl p-4 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors",
+                    qualifiedTeams.length >= 2
+                      ? "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/50"
+                      : "bg-card border-border"
+                  )}>
+                    <div className="space-y-1">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-emerald-600" />
+                        Sélectionner les équipes qualifiées
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Cliquez sur les cases <Square className="w-3.5 h-3.5 inline mx-1 -mt-0.5" /> dans le classement pour cocher les équipes qui passent en phase finale.
+                      </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleClearSelection}
-                      disabled={qualifiedTeams.length === 0 || isLocked}
-                      className="text-destructive hover:bg-destructive/10 border-destructive/20 min-h-[44px]"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Vider
-                    </Button>
+                    <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+                      {qualifiedTeams.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearSelection}
+                          className="text-destructive hover:bg-destructive/10 min-h-[44px] shrink-0"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Tout décocher
+                        </Button>
+                      )}
+                      <Button
+                        onClick={handleToggleLock}
+                        disabled={lockLoading || qualifiedTeams.length < 2}
+                        className={cn(
+                          "gap-2 min-h-[44px] flex-1 sm:flex-none",
+                          qualifiedTeams.length >= 2 && "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        )}
+                      >
+                        <Trophy className="w-4 h-4" />
+                        {qualifiedTeams.length < 2
+                          ? `Sélectionner au moins 2 équipes`
+                          : `Verrouiller (${qualifiedTeams.length} équipes) et créer le bracket`
+                        }
+                        {qualifiedTeams.length >= 2 && <ArrowRight className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Bandeau quand verrouillé */}
+                {isLocked && (
+                  <div className="rounded-xl p-4 border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="font-semibold">{qualifiedTeams.length} équipes qualifiées — sélections verrouillées</p>
+                        <p className="text-sm text-muted-foreground">Déverrouillez pour modifier la sélection.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <Button variant="outline" size="sm" onClick={handleToggleLock} disabled={lockLoading} className="gap-2 min-h-[44px]">
+                        <Unlock className="w-4 h-4" /> Déverrouiller
+                      </Button>
+                      <Button size="sm" onClick={() => setActiveTab('knockout')} className="gap-2 min-h-[44px] flex-1 sm:flex-none">
+                        <Trophy className="w-4 h-4" />
+                        {knockoutMatches.length > 0 ? 'Voir le bracket' : 'Créer le bracket'}
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
@@ -448,6 +483,9 @@ const TournamentManager = ({ competition }) => {
                                 <TableHead className="text-center">J</TableHead>
                                 <TableHead className="text-center">Pts</TableHead>
                                 <TableHead className="text-center">Diff</TableHead>
+                                {!isLocked && (
+                                  <TableHead className="text-center text-xs text-emerald-600 font-semibold w-24">Qualifier</TableHead>
+                                )}
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -456,28 +494,37 @@ const TournamentManager = ({ competition }) => {
                                 return (
                                   <TableRow
                                     key={s.id}
-                                    onClick={() => toggleTeamSelection(s)}
+                                    onClick={() => !isLocked && toggleTeamSelection(s)}
                                     className={cn(
-                                      "transition-colors group",
+                                      "transition-colors",
                                       !isLocked ? "cursor-pointer hover:bg-muted/60" : "cursor-default",
                                       isSelected
-                                        ? "bg-green-100/50 dark:bg-emerald-950/40 hover:bg-green-100 dark:hover:bg-emerald-900/50 border-l-4 border-l-emerald-500"
-                                        : "",
-                                      isLocked && "opacity-90"
+                                        ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-l-4 border-l-emerald-500"
+                                        : ""
                                     )}
                                   >
-                                    <TableCell className={cn(isSelected && "pl-2")}>{s.rank}</TableCell>
-                                    <TableCell className="flex items-center gap-2 font-medium">
+                                    <TableCell className="font-mono text-sm">{s.rank}</TableCell>
+                                    <TableCell className="font-medium">
                                       <ClubBadge teamName={s.teamName} />
-                                      {isSelected && (
-                                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                                          Qualifié
-                                        </Badge>
-                                      )}
                                     </TableCell>
                                     <TableCell className="text-center text-muted-foreground">{s.played}</TableCell>
                                     <TableCell className="text-center font-bold text-primary">{s.points}</TableCell>
                                     <TableCell className="text-center text-muted-foreground">{(s.goalsFor - s.goalsAgainst)}</TableCell>
+                                    {!isLocked && (
+                                      <TableCell className="text-center">
+                                        {isSelected
+                                          ? <CheckSquare className="w-5 h-5 text-emerald-500 mx-auto" />
+                                          : <Square className="w-5 h-5 text-muted-foreground/40 mx-auto" />
+                                        }
+                                      </TableCell>
+                                    )}
+                                    {isLocked && isSelected && (
+                                      <TableCell className="text-center">
+                                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                                          Qualifié
+                                        </Badge>
+                                      </TableCell>
+                                    )}
                                   </TableRow>
                                 );
                               })}
