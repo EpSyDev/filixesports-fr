@@ -17,13 +17,15 @@ import MediaUpload from '@/components/MediaUpload';
 import MatchPlayerStats from '@/components/MatchPlayerStats';
 import CompetitionManagement from '@/components/CompetitionManagement';
 import { toast } from 'sonner';
-import { Trash2, Upload, X } from 'lucide-react';
+import { Trash2, Upload, X, Database, HardDrive, Users, Trophy, Clapperboard, Swords } from 'lucide-react';
+import { useStorageUsage, formatBytes } from '@/hooks/useStorageUsage';
 
 const AdminDashboard = () => {
   const { matches, createMatch, updateMatch, deleteMatch } = useMatches();
   const { players, createPlayer, updatePlayer, deletePlayer } = usePlayers();
   const { trophies, createTrophy, deleteTrophy } = useTrophies();
   const { media, createMedia, deleteMedia } = useMedia();
+  const { usage, loading: usageLoading } = useStorageUsage();
 
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
@@ -446,7 +448,7 @@ const AdminDashboard = () => {
               </TabsContent>
 
               <TabsContent value="media" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <MediaUpload onUpload={createMedia} />
                   <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>Médias</CardTitle></CardHeader>
@@ -466,6 +468,62 @@ const AdminDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Widget usage infrastructure */}
+                <Card className="shadow-lg shadow-black/30 border-primary/15">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="w-5 h-5 text-primary" />
+                      Utilisation de la base
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {usageLoading ? (
+                      <p className="text-muted-foreground text-sm">Chargement...</p>
+                    ) : usage ? (
+                      <div className="space-y-5">
+                        {/* Storage fichiers */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="flex items-center gap-1.5 text-sm font-semibold"><HardDrive className="w-4 h-4 text-primary" /> Stockage fichiers</span>
+                            <span className="font-stat text-sm text-primary">{formatBytes(usage.storageBytes)} <span className="text-muted-foreground font-normal">/ 1 GB</span></span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${usage.storagePct}%`,
+                                background: usage.storagePct > 80 ? 'hsl(var(--destructive))' : usage.storagePct > 60 ? '#f59e0b' : 'hsl(var(--primary))'
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{usage.mediaFiles} fichier{usage.mediaFiles > 1 ? 's' : ''} — WebP uniquement</p>
+                        </div>
+
+                        {/* Compteurs DB */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="bg-muted/30 border border-primary/10 rounded-lg p-3 text-center">
+                            <Users className="w-4 h-4 text-primary mx-auto mb-1" />
+                            <div className="font-stat text-2xl font-bold text-foreground">{usage.players}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Joueurs</div>
+                          </div>
+                          <div className="bg-muted/30 border border-primary/10 rounded-lg p-3 text-center">
+                            <Swords className="w-4 h-4 text-primary mx-auto mb-1" />
+                            <div className="font-stat text-2xl font-bold text-foreground">{usage.matches}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Matchs</div>
+                          </div>
+                          <div className="bg-muted/30 border border-primary/10 rounded-lg p-3 text-center">
+                            <Trophy className="w-4 h-4 text-primary mx-auto mb-1" />
+                            <div className="font-stat text-2xl font-bold text-foreground">{usage.trophies}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Trophées</div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">Données indisponibles</p>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>

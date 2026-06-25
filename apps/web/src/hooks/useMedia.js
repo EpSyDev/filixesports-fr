@@ -6,9 +6,18 @@ export const useMedia = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const ensureBucket = async () => {
+    await supabase.storage.createBucket('media', {
+      public: true,
+      allowedMimeTypes: ['image/webp'],
+      fileSizeLimit: 10 * 1024 * 1024,
+    }).catch(() => {}); // ignore si le bucket existe déjà
+  };
+
   const fetchMedia = async () => {
     try {
       setLoading(true);
+      await ensureBucket();
       const { data, error } = await supabase.from('media').select('*').order('uploadDate', { ascending: false });
       if (error) throw error;
       setMedia(data);

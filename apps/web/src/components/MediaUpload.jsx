@@ -20,9 +20,13 @@ const MediaUpload = ({ onUpload }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, file }));
+    if (!file) return;
+    if (formData.type === 'photo' && file.type !== 'image/webp') {
+      toast.error('Format invalide — seul le WebP est accepté pour les photos');
+      e.target.value = '';
+      return;
     }
+    setFormData(prev => ({ ...prev, file }));
   };
 
   const handleSubmit = async (e) => {
@@ -106,7 +110,7 @@ const MediaUpload = ({ onUpload }) => {
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
-                accept={formData.type === 'photo' ? 'image/*' : 'video/*'}
+                accept={formData.type === 'photo' ? 'image/webp' : 'video/*'}
                 required
               />
             </div>
