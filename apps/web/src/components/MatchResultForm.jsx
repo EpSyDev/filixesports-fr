@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Save, X } from 'lucide-react';
 
-const MatchResultForm = ({ match, onSave, onCancel }) => {
+const MatchResultForm = ({ match, onSave, onCancel, compact = false }) => {
   const [formData, setFormData] = useState({
     homeScore: '',
     awayScore: '',
@@ -45,6 +45,61 @@ const MatchResultForm = ({ match, onSave, onCancel }) => {
     }
   };
 
+  if (compact) {
+    return (
+      <Card className="border-border shadow-sm bg-background">
+        <CardContent className="p-2.5">
+          <form onSubmit={handleSubmit} className="space-y-2">
+            <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1.5 rounded-md border">
+              <span className="font-semibold flex-1 text-right text-xs truncate" title={match.homeTeam}>{match.homeTeam}</span>
+              <Input
+                type="number" min="0"
+                value={formData.homeScore}
+                onChange={(e) => setFormData({ ...formData, homeScore: e.target.value })}
+                className="w-10 h-7 text-center font-bold text-sm px-1"
+                placeholder="-"
+              />
+              <span className="text-muted-foreground text-[10px] font-medium">VS</span>
+              <Input
+                type="number" min="0"
+                value={formData.awayScore}
+                onChange={(e) => setFormData({ ...formData, awayScore: e.target.value })}
+                className="w-10 h-7 text-center font-bold text-sm px-1"
+                placeholder="-"
+              />
+              <span className="font-semibold flex-1 text-left text-xs truncate" title={match.awayTeam}>{match.awayTeam}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="h-7 text-xs px-2"
+              />
+              <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                <SelectTrigger className="h-7 text-xs px-2">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="scheduled">Planifié</SelectItem>
+                  <SelectItem value="played">Joué</SelectItem>
+                  <SelectItem value="cancelled">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end pt-1 border-t border-border/40">
+              <Button type="submit" disabled={isSubmitting} size="sm" className="h-7 text-xs gap-1 px-3">
+                <Save className="w-3 h-3" /> Enregistrer
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-border shadow-sm bg-background">
       <CardContent className="p-4">
@@ -80,8 +135,8 @@ const MatchResultForm = ({ match, onSave, onCancel }) => {
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               className="min-h-[44px]"
             />
-            <Select 
-              value={formData.status} 
+            <Select
+              value={formData.status}
               onValueChange={(v) => setFormData({ ...formData, status: v })}
             >
               <SelectTrigger className="min-h-[44px]">

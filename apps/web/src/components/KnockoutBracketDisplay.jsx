@@ -117,8 +117,15 @@ const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
             const isComplete = !roundMatches.some(m => m.isDummy) && checkIfRoundComplete(matches[0]?.competitionId, roundKey, matches);
             const isActive = roundKey === activeRoundKey;
 
+            const isThirdPlace = roundKey === '1';
+
             return (
-              <div key={roundKey} className="flex flex-col justify-around flex-1 relative min-w-[200px] gap-4">
+              <div key={roundKey} className={cn(
+                "flex flex-col justify-around relative gap-4",
+                isThirdPlace
+                  ? "flex-none w-[180px] min-w-[160px] border-l border-dashed border-border/50 pl-3 ml-1"
+                  : "flex-1 min-w-[200px]"
+              )}>
                 <div className="absolute top-0 left-0 right-0 flex justify-center -mt-10">
                   <div className={cn(
                     "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md border text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors",
@@ -157,6 +164,7 @@ const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
                         <MatchResultForm
                           match={match}
                           onSave={onSaveMatch}
+                          compact={isThirdPlace}
                           className={cn(
                             "relative z-10",
                             match.isDummy && "opacity-40 grayscale pointer-events-none border-dashed"
