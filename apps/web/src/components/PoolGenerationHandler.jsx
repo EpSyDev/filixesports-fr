@@ -11,12 +11,32 @@ const PoolGenerationHandler = ({ competitionId, pools, onSuccess }) => {
 
   const handleGenerate = async () => {
     if (!validatePoolAssignments(pools)) {
-      toast.error('Veuillez assigner exactement 4 équipes par poule (24 équipes au total).');
+      toast.error('Veuillez assigner exactement 4 équipes par poule.');
       return;
     }
 
     setIsGenerating(true);
     try {
+      // Garde : nettoyer toute donnée partielle avant de générer
+      const { data: existingPools } = await supabase
+        .from('tournament_pools').select('id').eq('competitionId', competitionId);
+      if (existingPools && existingPools.length > 0) {
+        const ids = existingPools.map(p => p.id);
+        await supabase.from('tournament_pools').delete().in('id', ids);
+      }
+      const { data: existingMatches } = await supabase
+        .from('pool_matches').select('id').eq('competitionId', competitionId);
+      if (existingMatches && existingMatches.length > 0) {
+        const ids = existingMatches.map(m => m.id);
+        await supabase.from('pool_matches').delete().in('id', ids);
+      }
+      const { data: existingStandings } = await supabase
+        .from('pool_standings').select('id').eq('competitionId', competitionId);
+      if (existingStandings && existingStandings.length > 0) {
+        const ids = existingStandings.map(s => s.id);
+        await supabase.from('pool_standings').delete().in('id', ids);
+      }
+
       // 1. Save Pools and update teams
       for (const pool of pools) {
         const { error: poolErr } = await supabase.from('tournament_pools').insert({
