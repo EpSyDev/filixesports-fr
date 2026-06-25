@@ -64,8 +64,7 @@ export const TACTIC_OPTIONS = ['3-5-2', '4-3-3', '3-1-4-2', '3-4-3'];
 
 const playerPhoto = (player) => player?.image || player?.photo || null;
 
-const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly, selectedPlayer, onSlotTap }) => {
-  const isTapTarget = !isReadOnly && selectedPlayer && !player;
+const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemove, isActive, isReadOnly, onSlotOpen }) => {
   const photo = playerPhoto(player);
   const depthStyle = { transform: `scale(${position.scale ?? 1})` };
   return (
@@ -73,14 +72,13 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
       className={cn(
         "player-slot group z-10",
         player ? "is-filled" : (isActive && !isReadOnly ? "slot-target-active" : "slot-target-inactive"),
-        isReadOnly ? "cursor-default" : "",
-        isTapTarget ? "ring-2 ring-primary/70 ring-offset-1 ring-offset-transparent animate-pulse cursor-pointer" : ""
+        isReadOnly ? "cursor-default" : (!player ? "cursor-pointer" : ""),
       )}
       style={{ top: position.top, left: position.left }}
       onDragOver={!isReadOnly ? (e) => onDragOver(e, position.id) : undefined}
       onDragLeave={!isReadOnly ? onDragLeave : undefined}
       onDrop={!isReadOnly ? (e) => onDrop(e, position.id) : undefined}
-      onClick={!isReadOnly && selectedPlayer ? () => onSlotTap(position.id) : undefined}
+      onClick={!isReadOnly && !player ? () => onSlotOpen?.(position.id) : undefined}
     >
       {player ? (
         <div className="relative flex flex-col items-center justify-center w-full" style={depthStyle}>
@@ -117,7 +115,7 @@ const PlayerSlot = ({ position, player, onDrop, onDragOver, onDragLeave, onRemov
   );
 };
 
-const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2', teamName, selectedPlayer }) => {
+const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly, tactic = '3-5-2', teamName, onSlotOpen }) => {
   const [activeSlot, setActiveSlot] = useState(null);
 
   const rawPositions = FORMATIONS[tactic] || FORMATIONS['3-5-2'];
@@ -157,11 +155,6 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
         console.error("Failed to parse player data on drop", err);
       }
     }
-  };
-
-  const handleSlotTap = (positionId) => {
-    if (isReadOnly || !selectedPlayer) return;
-    onPlayerDrop(positionId, selectedPlayer);
   };
 
   return (
@@ -210,8 +203,7 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
             onDrop={handleDrop}
             onRemove={onPlayerRemove}
             isReadOnly={isReadOnly}
-            selectedPlayer={selectedPlayer}
-            onSlotTap={handleSlotTap}
+            onSlotOpen={onSlotOpen}
           />
         ))}
 
