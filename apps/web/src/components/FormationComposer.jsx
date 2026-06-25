@@ -96,7 +96,7 @@ const FormationComposer = ({ isReadOnly }) => {
     const formation = formationsList.find(f => f.id === formationId);
     if (!formation) return;
     setSelectedFormationId(formation.id);
-    if (formation.tactic) setTeamTactic(formation.tactic);
+    if (formation.formation ?? formation.tactic) setTeamTactic(formation.formation ?? formation.tactic);
     const newComp = {};
     if (Array.isArray(formation.players)) {
       formation.players.forEach(p => {
@@ -128,7 +128,7 @@ const FormationComposer = ({ isReadOnly }) => {
 
     setIsSaving(true);
     try {
-      const payload = { name: 'Formation Principale', tactic: teamTactic, players: assignedPlayers };
+      const payload = { name: 'Formation Principale', formation: teamTactic, tactic: teamTactic, players: assignedPlayers };
       let savedRecord;
       if (selectedFormationId !== 'new') {
         const { data, error } = await supabase.from('formations').update(payload).eq('id', selectedFormationId).select().single();

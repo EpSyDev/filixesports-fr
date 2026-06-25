@@ -27,7 +27,8 @@ export const useMedia = () => {
     let fileUrl = '';
 
     if (file instanceof File) {
-      const path = `${Date.now()}-${file.name}`;
+      const sanitized = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${Date.now()}-${sanitized}`;
       const { error: uploadError } = await supabase.storage.from('media').upload(path, file);
       if (uploadError) throw new Error(uploadError.message);
       const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
@@ -36,7 +37,7 @@ export const useMedia = () => {
 
     const { data: record, error } = await supabase
       .from('media')
-      .insert({ ...rest, file: fileUrl, uploadDate: new Date().toISOString() })
+      .insert({ ...rest, url: fileUrl, uploadDate: new Date().toISOString() })
       .select().single();
     if (error) throw new Error(error.message);
     await fetchMedia();
