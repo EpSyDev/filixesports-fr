@@ -360,11 +360,9 @@ const TournamentManager = ({ competition }) => {
                 <Network className="w-12 h-12 mx-auto text-muted-foreground opacity-50" />
                 <h3 className="text-xl font-bold">Les poules ont déjà été générées</h3>
                 <p className="text-muted-foreground">Vous pouvez consulter les matchs dans l'onglet "Poules".</p>
-                {poolMatches.every(m => m.status === 'scheduled') && (
-                  <Button variant="outline" onClick={handleResetPools} disabled={isLocked} className="mt-4 gap-2 min-h-[44px]">
-                    <Edit className="w-4 h-4" /> Modifier la répartition
-                  </Button>
-                )}
+                <Button variant="outline" onClick={handleResetPools} disabled={isLocked} className="mt-4 gap-2 min-h-[44px] text-destructive border-destructive/30 hover:bg-destructive/10">
+                  <Edit className="w-4 h-4" /> Réinitialiser les poules
+                </Button>
               </CardContent>
             </Card>
           ) : (
