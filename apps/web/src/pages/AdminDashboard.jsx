@@ -18,7 +18,7 @@ import MatchPlayerStats from '@/components/MatchPlayerStats';
 import CompetitionManagement from '@/components/CompetitionManagement';
 import { toast } from 'sonner';
 import { Trash2, Upload, X, Database, HardDrive, Users, Trophy, Clapperboard, Swords } from 'lucide-react';
-import { useStorageUsage, formatBytes } from '@/hooks/useStorageUsage';
+import { useStorageUsage, formatBytes, DB_LIMIT_MB } from '@/hooks/useStorageUsage';
 
 const AdminDashboard = () => {
   const { matches, createMatch, updateMatch, deleteMatch } = useMatches();
@@ -488,6 +488,7 @@ const AdminDashboard = () => {
                             <span className="flex items-center gap-1.5 text-sm font-semibold"><HardDrive className="w-4 h-4 text-primary" /> Stockage fichiers</span>
                             <span className="font-stat text-sm text-primary">{formatBytes(usage.storageBytes)} <span className="text-muted-foreground font-normal">/ 1 GB</span></span>
                           </div>
+                          <p className="text-[10px] text-muted-foreground mb-1">Base de données PostgreSQL : limite 500 MB (free tier)</p>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"

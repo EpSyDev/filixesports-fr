@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import supabase from '@/lib/supabaseClient';
 
-const STORAGE_LIMIT = 1024 * 1024 * 1024; // 1 GB free tier Supabase
+const STORAGE_LIMIT = 1024 * 1024 * 1024;     // 1 GB — stockage fichiers (free tier)
+export const DB_LIMIT_MB = 500;               // 500 MB — base de données (free tier)
 
 export const formatBytes = (bytes) => {
   if (bytes === 0) return '0 B';
