@@ -13,6 +13,7 @@ import { Trophy, Plus, Settings, Users, CalendarDays, BarChart3, Loader2, Trash2
 import CompetitionTeamsManager from './CompetitionTeamsManager';
 import MatchManager from './MatchManager';
 import StandingsTable from './StandingsTable';
+import TournamentManager from './TournamentManager';
 
 const CompetitionManagement = () => {
   const [competitions, setCompetitions] = useState([]);
@@ -217,25 +218,42 @@ const CompetitionManagement = () => {
       )}
 
       {selectedCompId && selectedComp && (
-        <Tabs defaultValue="teams" className="w-full">
+        <Tabs defaultValue={selectedComp.type === 'TOURNOI' ? 'tournament' : 'teams'} className="w-full">
           <div className="overflow-x-auto pb-2 mb-6 custom-scrollbar">
             <TabsList className="inline-flex w-max min-w-full h-auto p-1 bg-muted/50">
-              <TabsTrigger value="teams" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><Users className="w-4 h-4" /> Équipes</TabsTrigger>
-              <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Résultats</TabsTrigger>
-              <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Classements</TabsTrigger>
+              {selectedComp.type === 'TOURNOI' ? (
+                <TabsTrigger value="tournament" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2">
+                  <Trophy className="w-4 h-4" /> Tournoi
+                </TabsTrigger>
+              ) : (
+                <>
+                  <TabsTrigger value="teams" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><Users className="w-4 h-4" /> Équipes</TabsTrigger>
+                  <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Résultats</TabsTrigger>
+                  <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Classements</TabsTrigger>
+                </>
+              )}
               <TabsTrigger value="settings" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2 ml-auto"><Settings className="w-4 h-4" /> Paramètres</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="teams" className="animate-in fade-in duration-300">
-            <CompetitionTeamsManager competitionId={selectedCompId} />
-          </TabsContent>
-          <TabsContent value="matches" className="animate-in fade-in duration-300">
-            <MatchManager competitionId={selectedCompId} />
-          </TabsContent>
-          <TabsContent value="results" className="animate-in fade-in duration-300">
-            <StandingsTable competitionId={selectedCompId} />
-          </TabsContent>
+          {selectedComp.type === 'TOURNOI' ? (
+            <TabsContent value="tournament" className="animate-in fade-in duration-300">
+              <TournamentManager competition={selectedComp} />
+            </TabsContent>
+          ) : (
+            <>
+              <TabsContent value="teams" className="animate-in fade-in duration-300">
+                <CompetitionTeamsManager competitionId={selectedCompId} />
+              </TabsContent>
+              <TabsContent value="matches" className="animate-in fade-in duration-300">
+                <MatchManager competitionId={selectedCompId} />
+              </TabsContent>
+              <TabsContent value="results" className="animate-in fade-in duration-300">
+                <StandingsTable competitionId={selectedCompId} />
+              </TabsContent>
+            </>
+          )}
+
           <TabsContent value="settings" className="animate-in fade-in duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-card shadow-sm border-border">
