@@ -24,11 +24,12 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
     if (!onSave || isDummy) return;
     const hs = homeScore !== '' ? Number(homeScore) : null;
     const as = awayScore !== '' ? Number(awayScore) : null;
+    // Attendre que les deux scores soient renseignés (ou les deux vides pour reset)
+    if ((hs === null) !== (as === null)) return;
     const isPlayed = hs !== null && as !== null;
     const winner = isPlayed
       ? (hs > as ? match.homeTeam : as > hs ? match.awayTeam : match.winner ?? null)
       : null;
-    // N'envoyer que les colonnes existantes dans knockout_matches
     onSave({
       id: match.id,
       competitionId: match.competitionId,
