@@ -221,8 +221,8 @@ const CompetitionManagement = () => {
           <div className="overflow-x-auto pb-2 mb-6 custom-scrollbar">
             <TabsList className="inline-flex w-max min-w-full h-auto p-1 bg-muted/50">
               <TabsTrigger value="teams" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><Users className="w-4 h-4" /> Équipes</TabsTrigger>
-              <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Matchs</TabsTrigger>
-              <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Résultats</TabsTrigger>
+              <TabsTrigger value="matches" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Résultats</TabsTrigger>
+              <TabsTrigger value="results" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Classements</TabsTrigger>
               <TabsTrigger value="settings" className="py-2.5 px-6 min-h-[44px] flex items-center gap-2 ml-auto"><Settings className="w-4 h-4" /> Paramètres</TabsTrigger>
             </TabsList>
           </div>

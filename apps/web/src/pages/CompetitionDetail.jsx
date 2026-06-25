@@ -36,12 +36,8 @@ const CompetitionDetail = () => {
         setCompetition(comp);
 
         if (comp.type === 'LIGUE') {
-          const [matchesRes, standingsRes] = await Promise.all([
-            supabase.from('league_matches').select('*').eq('competitionId', id).order('matchday', { ascending: true }),
-            supabase.from('league_standings').select('*').eq('competitionId', id).order('rank', { ascending: true })
-          ]);
+          const matchesRes = await supabase.from('league_matches').select('*').eq('competitionId', id).order('matchday', { ascending: true });
           setLeagueMatches(matchesRes.data || []);
-          setLeagueStandings(standingsRes.data || []);
         } else {
           const [poolsRes, pMatches, pStandings, kMatches] = await Promise.all([
             supabase.from('tournament_pools').select('*').eq('competitionId', id).order('poolId', { ascending: true }),
@@ -80,13 +76,6 @@ const CompetitionDetail = () => {
           ]);
           setLeagueMatches(m.data || []);
           setLeagueStandings(s.data || []);
-        })
-        .on('postgres_changes', {
-          event: '*', schema: 'public', table: 'league_standings',
-          filter: `competitionId=eq.${id}`
-        }, async () => {
-          const { data } = await supabase.from('league_standings').select('*').eq('competitionId', id).order('rank', { ascending: true });
-          setLeagueStandings(data || []);
         })
         .subscribe();
       channels.push(channel);
@@ -148,7 +137,7 @@ const CompetitionDetail = () => {
             {competition.type === 'LIGUE' ? (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-8 space-y-6">
-                  <StandingsTable standings={leagueStandings} loading={false} />
+                  <StandingsTable competitionId={id} />
                 </div>
                 <div className="lg:col-span-4 space-y-6">
                   <h3 className="font-display uppercase text-2xl flex items-center gap-2 mb-6"><Calendar className="text-primary w-6 h-6" /> Calendrier</h3>

@@ -19,19 +19,34 @@ const StandingsTable = ({ standings: standingsProp = [], loading: loadingProp = 
     if (!competitionId) return;
 
     const load = async () => {
-      const { data } = await supabase
-        .from('league_standings')
+      const { data: matches } = await supabase
+        .from('league_matches')
         .select('*')
-        .eq('competitionId', competitionId)
-        .order('rank', { ascending: true });
-      setFetched(data || []);
+        .eq('competitionId', competitionId);
+
+      const map = {};
+      (matches || []).forEach(m => {
+        [m.homeTeam, m.awayTeam].forEach(team => {
+          if (team && !map[team]) map[team] = { teamName: team, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+        });
+        if (!m.homeTeam || !m.awayTeam || m.status !== 'played') return;
+        const hs = Number(m.homeScore) || 0;
+        const as = Number(m.awayScore) || 0;
+        map[m.homeTeam].played++; map[m.homeTeam].goalsFor += hs; map[m.homeTeam].goalsAgainst += as;
+        map[m.awayTeam].played++; map[m.awayTeam].goalsFor += as; map[m.awayTeam].goalsAgainst += hs;
+        if (hs > as) { map[m.homeTeam].won++; map[m.homeTeam].points += 3; map[m.awayTeam].lost++; }
+        else if (hs < as) { map[m.awayTeam].won++; map[m.awayTeam].points += 3; map[m.homeTeam].lost++; }
+        else { map[m.homeTeam].drawn++; map[m.homeTeam].points++; map[m.awayTeam].drawn++; map[m.awayTeam].points++; }
+      });
+
+      setFetched(Object.values(map));
       setFetching(false);
     };
     load();
 
     const channel = supabase.channel(`standings-${competitionId}`)
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'league_standings',
+        event: '*', schema: 'public', table: 'league_matches',
         filter: `competitionId=eq.${competitionId}`
       }, load)
       .subscribe();
