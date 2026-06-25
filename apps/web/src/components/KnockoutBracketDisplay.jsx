@@ -1,193 +1,276 @@
 
-import React from 'react';
-import { Trophy, RotateCcw, CheckCircle2, PlayCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trophy, RotateCcw, CheckCircle2, PlayCircle, Medal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import MatchResultForm from './MatchResultForm';
 import { getKnockoutBracketStatus, checkIfRoundComplete, cleanTeamName } from '@/utils/competitionUtils';
 import { cn } from '@/lib/utils';
 
-const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
-  const rounds = {
-    '16': matches.filter(m => m.round === '16').sort((a, b) => a.matchNumber - b.matchNumber),
-    '8': matches.filter(m => m.round === '8').sort((a, b) => a.matchNumber - b.matchNumber),
-    '4': matches.filter(m => m.round === '4').sort((a, b) => a.matchNumber - b.matchNumber),
-    '2': matches.filter(m => m.round === '2').sort((a, b) => a.matchNumber - b.matchNumber),
-    '1': matches.filter(m => m.round === '1').sort((a, b) => a.matchNumber - b.matchNumber),
+// ── Carte compacte d'un match dans le bracket ──────────────────────────────
+const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) => {
+  const [homeScore, setHomeScore] = useState('');
+  const [awayScore, setAwayScore] = useState('');
+  const [date, setDate] = useState('');
+  const [status, setStatus] = useState('scheduled');
+
+  useEffect(() => {
+    setHomeScore(match.homeScore != null ? String(match.homeScore) : '');
+    setAwayScore(match.awayScore != null ? String(match.awayScore) : '');
+    setDate(match.date ? match.date.split('T')[0] : '');
+    setStatus(match.status || 'scheduled');
+  }, [match.id, match.homeScore, match.awayScore, match.status, match.date]);
+
+  const save = () => {
+    if (!onSave || isDummy) return;
+    const hs = homeScore !== '' ? Number(homeScore) : null;
+    const as = awayScore !== '' ? Number(awayScore) : null;
+    const isPlayed = hs !== null && as !== null;
+    const winner = isPlayed
+      ? (hs > as ? match.homeTeam : as > hs ? match.awayTeam : match.winner ?? null)
+      : null;
+    onSave({ ...match, homeScore: hs, awayScore: as, status: isPlayed ? 'played' : status, winner, date: date ? new Date(date).toISOString() : null });
   };
 
-  const getRoundName = (roundNum) => {
-    switch (roundNum) {
-      case '16': return '8èmes';
-      case '8': return 'Quarts';
-      case '4': return 'Demis';
-      case '2': return 'Finale';
-      case '1': return '3e Place';
-      default: return `Tour ${roundNum}`;
-    }
-  };
+  const homeWon = match.winner && match.winner === match.homeTeam;
+  const awayWon = match.winner && match.winner === match.awayTeam;
+  const noTeams = !match.homeTeam && !match.awayTeam;
+  const disabled = isDummy || noTeams;
 
-  const startingRound = ['16', '8', '4', '2'].find(r => rounds[r] && rounds[r].length > 0);
-  
-  let displayRounds = [];
-  if (startingRound === '16') displayRounds = ['16', '8', '4', '2'];
-  else if (startingRound === '8') displayRounds = ['8', '4', '2'];
-  else if (startingRound === '4') displayRounds = ['4', '2'];
-  else if (startingRound === '2') displayRounds = ['2'];
-  
-  if (rounds['1'] && rounds['1'].length > 0) {
-    displayRounds.push('1');
-  }
-
-  const getExpectedMatchCount = (round) => {
-    if (round === '16') return 8;
-    if (round === '8') return 4;
-    if (round === '4') return 2;
-    if (round === '2') return 1;
-    if (round === '1') return 1;
-    return 0;
-  };
-
-  const getPaddedMatches = (roundKey) => {
-    const actualMatches = rounds[roundKey] || [];
-    const expectedCount = getExpectedMatchCount(roundKey);
-    
-    if (actualMatches.length >= expectedCount) return actualMatches;
-    
-    const padded = [...actualMatches];
-    for (let i = actualMatches.length; i < expectedCount; i++) {
-      padded.push({
-        id: `dummy-${roundKey}-${i}`,
-        isDummy: true,
-        round: roundKey,
-        matchNumber: i + 1,
-        homeTeam: '',
-        awayTeam: '',
-        status: 'scheduled'
-      });
-    }
-    return padded.sort((a, b) => a.matchNumber - b.matchNumber);
-  };
-
-  const status = getKnockoutBracketStatus(matches);
-
-  const sortedIncompleteKeys = displayRounds
-    .filter(k => k !== '1' && !checkIfRoundComplete(matches[0]?.competitionId, k, matches))
-    .sort((a, b) => Number(b) - Number(a));
-  
-  const activeRoundKey = sortedIncompleteKeys[0] || null;
-
-  if (displayRounds.length === 0) {
+  // BYE
+  if (match.homeTeam && !match.awayTeam && match.status === 'played') {
     return (
-      <div className="p-8 text-center text-muted-foreground">
-        Aucun match n'est disponible pour la phase finale.
+      <div className="rounded-lg border border-dashed border-border/40 bg-muted/10 px-3 py-2 text-center opacity-50 w-full select-none">
+        <p className="text-xs font-semibold">{match.homeTeam}</p>
+        <Badge variant="secondary" className="text-[9px] mt-0.5 py-0 px-1.5">BYE</Badge>
       </div>
     );
   }
 
   return (
+    <div className={cn(
+      "rounded-lg border bg-card shadow-sm overflow-hidden w-full",
+      isDummy && "opacity-20 pointer-events-none border-dashed",
+      !disabled && "hover:shadow-md hover:border-primary/30 transition-all duration-150"
+    )}>
+      {/* Équipe domicile */}
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-2 border-b border-border/40 transition-colors",
+        homeWon && "bg-primary/10"
+      )}>
+        <span className={cn(
+          "flex-1 text-sm truncate min-w-0",
+          !match.homeTeam ? "text-muted-foreground/30 italic" : homeWon ? "font-bold text-primary" : "font-medium"
+        )}>
+          {match.homeTeam || '—'}
+        </span>
+        {!disabled && (
+          <input
+            type="number" min="0"
+            value={homeScore}
+            onChange={e => setHomeScore(e.target.value)}
+            onBlur={save}
+            placeholder="—"
+            className={cn(
+              "w-8 h-6 text-center text-sm font-bold rounded bg-muted/40 border border-transparent focus:outline-none focus:border-primary/60 transition-colors",
+              homeWon && "text-primary bg-primary/10"
+            )}
+          />
+        )}
+        {disabled && <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>}
+      </div>
+
+      {/* Équipe extérieure */}
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-2 transition-colors",
+        awayWon && "bg-primary/10"
+      )}>
+        <span className={cn(
+          "flex-1 text-sm truncate min-w-0",
+          !match.awayTeam ? "text-muted-foreground/30 italic" : awayWon ? "font-bold text-primary" : "font-medium"
+        )}>
+          {match.awayTeam || '—'}
+        </span>
+        {!disabled && (
+          <input
+            type="number" min="0"
+            value={awayScore}
+            onChange={e => setAwayScore(e.target.value)}
+            onBlur={save}
+            placeholder="—"
+            className={cn(
+              "w-8 h-6 text-center text-sm font-bold rounded bg-muted/40 border border-transparent focus:outline-none focus:border-primary/60 transition-colors",
+              awayWon && "text-primary bg-primary/10"
+            )}
+          />
+        )}
+        {disabled && <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>}
+      </div>
+
+      {/* Date + statut (3e place uniquement) */}
+      {showMeta && !noTeams && (
+        <div className="flex gap-1.5 px-3 py-1.5 border-t border-border/30 bg-muted/20">
+          <input
+            type="date" value={date}
+            onChange={e => setDate(e.target.value)}
+            onBlur={save}
+            className="flex-1 h-6 text-[10px] px-1.5 bg-transparent border border-border/40 rounded focus:outline-none focus:border-primary/50"
+          />
+          <select
+            value={status}
+            onChange={e => setStatus(e.target.value)}
+            onBlur={save}
+            className="h-6 text-[10px] px-1 bg-muted/40 border border-border/40 rounded focus:outline-none"
+          >
+            <option value="scheduled">Planifié</option>
+            <option value="played">Joué</option>
+            <option value="cancelled">Annulé</option>
+          </select>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Composant principal ───────────────────────────────────────────────────────
+const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
+  const rounds = {
+    '16': matches.filter(m => m.round === '16').sort((a, b) => a.matchNumber - b.matchNumber),
+    '8':  matches.filter(m => m.round === '8').sort((a, b) => a.matchNumber - b.matchNumber),
+    '4':  matches.filter(m => m.round === '4').sort((a, b) => a.matchNumber - b.matchNumber),
+    '2':  matches.filter(m => m.round === '2').sort((a, b) => a.matchNumber - b.matchNumber),
+    '1':  matches.filter(m => m.round === '1').sort((a, b) => a.matchNumber - b.matchNumber),
+  };
+
+  const getRoundName = (r) => ({ '16': '8èmes', '8': 'Quarts', '4': 'Demis', '2': 'Finale' }[r] ?? `Tour ${r}`);
+
+  const startingRound = ['16', '8', '4', '2'].find(r => rounds[r]?.length > 0);
+  let mainRounds = [];
+  if (startingRound === '16') mainRounds = ['16', '8', '4', '2'];
+  else if (startingRound === '8') mainRounds = ['8', '4', '2'];
+  else if (startingRound === '4') mainRounds = ['4', '2'];
+  else if (startingRound === '2') mainRounds = ['2'];
+
+  const expectedCount = { '16': 8, '8': 4, '4': 2, '2': 1, '1': 1 };
+
+  const getPaddedMatches = (roundKey) => {
+    const actual = rounds[roundKey] || [];
+    const expected = expectedCount[roundKey] ?? 0;
+    if (actual.length >= expected) return actual;
+    const padded = [...actual];
+    for (let i = actual.length; i < expected; i++) {
+      padded.push({ id: `dummy-${roundKey}-${i}`, isDummy: true, round: roundKey, matchNumber: i + 1, homeTeam: '', awayTeam: '', status: 'scheduled' });
+    }
+    return padded.sort((a, b) => a.matchNumber - b.matchNumber);
+  };
+
+  const status = getKnockoutBracketStatus(matches);
+  const thirdPlaceMatch = rounds['1']?.[0];
+
+  const activeRoundKey = mainRounds
+    .filter(k => !checkIfRoundComplete(matches[0]?.competitionId, k, matches))
+    .sort((a, b) => Number(b) - Number(a))[0] ?? null;
+
+  if (mainRounds.length === 0) {
+    return <div className="p-8 text-center text-muted-foreground">Aucun match disponible pour la phase finale.</div>;
+  }
+
+  return (
     <div className="w-full flex flex-col bg-card rounded-xl border shadow-sm overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border-b bg-muted/20 gap-3">
-        <div className="flex items-center gap-3">
-          <h3 className="font-bold text-sm md:text-base">Arbre Final</h3>
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b bg-muted/20 gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="font-bold text-sm">Arbre Final</h3>
           {status.status === 'completed' && (
-            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] md:text-xs gap-1 py-0 px-2 h-5">
+            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] gap-1 py-0 px-2 h-5">
               <Trophy className="w-3 h-3" /> Terminé
             </Badge>
           )}
-          <Badge variant="default" className="text-[10px] md:text-xs gap-1 py-0 px-2 h-5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-            Édition auto-sauvegardée
+          <Badge variant="outline" className="text-[10px] gap-1 py-0 px-2 h-5 text-muted-foreground">
+            Sauvegarde auto au blur
           </Badge>
         </div>
-        
-        <div className="flex items-center gap-2">
-          {onResetBracket && (
-            <Button variant="outline" size="sm" onClick={onResetBracket} className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/20 transition-all duration-200">
-              <RotateCcw className="w-3.5 h-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Réinitialiser</span>
-            </Button>
-          )}
-        </div>
+        {onResetBracket && (
+          <Button variant="outline" size="sm" onClick={onResetBracket} className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/20 shrink-0">
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Réinitialiser
+          </Button>
+        )}
       </div>
 
-      <div className="w-full p-2 md:p-4 bg-background overflow-x-auto">
-        <div className="flex flex-row min-w-[800px] w-full justify-between gap-4 md:gap-6 pt-10 pb-4 px-2">
-          {displayRounds.map((roundKey, colIndex) => {
+      {/* Bracket principal */}
+      <div className="w-full p-3 md:p-5 bg-background overflow-x-auto">
+        <div className="flex flex-row gap-3 md:gap-5 pt-10 pb-2 min-w-[520px]">
+          {mainRounds.map((roundKey, colIndex) => {
             const roundMatches = getPaddedMatches(roundKey);
-            const isLastRound = colIndex === displayRounds.length - 1;
             const isComplete = !roundMatches.some(m => m.isDummy) && checkIfRoundComplete(matches[0]?.competitionId, roundKey, matches);
             const isActive = roundKey === activeRoundKey;
 
-            const isThirdPlace = roundKey === '1';
-
             return (
-              <div key={roundKey} className={cn(
-                "flex flex-col justify-around relative gap-4",
-                isThirdPlace
-                  ? "flex-none w-[180px] min-w-[160px] border-l border-dashed border-border/50 pl-3 ml-1"
-                  : "flex-1 min-w-[200px]"
-              )}>
-                <div className="absolute top-0 left-0 right-0 flex justify-center -mt-10">
+              <div key={roundKey} className="flex flex-col justify-around flex-1 relative gap-3 min-w-[140px] max-w-[240px]">
+                {/* Label de round */}
+                <div className="absolute top-0 left-0 right-0 flex justify-center -mt-9">
                   <div className={cn(
-                    "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md border text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors",
-                    isComplete && "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400",
-                    isActive && "bg-primary/10 border-primary/30 text-primary ring-2 ring-primary/20",
+                    "flex items-center gap-1 py-1 px-2.5 rounded-md border text-[10px] font-bold uppercase tracking-wider",
+                    isComplete && "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+                    isActive && "bg-primary/10 border-primary/30 text-primary ring-1 ring-primary/20",
                     !isComplete && !isActive && "bg-muted/30 border-border text-muted-foreground"
                   )}>
                     {getRoundName(roundKey)}
-                    {isComplete && <CheckCircle2 className="w-3 h-3" />}
-                    {isActive && <PlayCircle className="w-3 h-3" />}
+                    {isComplete && <CheckCircle2 className="w-2.5 h-2.5" />}
+                    {isActive && <PlayCircle className="w-2.5 h-2.5" />}
                   </div>
                 </div>
-                
-                {roundMatches.map((match) => {
-                  const hasNext = !isLastRound && roundKey !== '1';
-                  
-                  return (
-                    <div key={match.id} className="relative w-full flex items-center justify-center py-2 group">
-                      {hasNext && (
-                        <div className="hidden md:block absolute top-1/2 -right-2 md:-right-3 w-2 md:w-3 border-t-2 border-border/60 z-0 transition-colors group-hover:border-primary/40" />
-                      )}
-                      {colIndex > 0 && roundKey !== '1' && (
-                        <div className="hidden md:block absolute top-1/2 -left-2 md:-left-3 w-2 md:w-3 border-t-2 border-border/60 z-0 transition-colors group-hover:border-primary/40" />
-                      )}
 
-                      {/* Match BYE : équipe exemptée, pas interactive */}
-                      {match.homeTeam && !match.awayTeam && match.status === 'played' ? (
-                        <div className={cn(
-                          "relative z-10 w-full border border-dashed rounded-xl p-3 bg-muted/10 text-center opacity-60 select-none",
-                        )}>
-                          <p className="text-xs text-muted-foreground mb-0.5">Exemption</p>
-                          <p className="font-bold text-sm">{match.homeTeam}</p>
-                          <Badge variant="secondary" className="text-[9px] mt-1 py-0 px-1.5">BYE</Badge>
-                        </div>
-                      ) : (
-                        <MatchResultForm
-                          match={match}
-                          onSave={onSaveMatch}
-                          compact={isThirdPlace}
-                          className={cn(
-                            "relative z-10",
-                            match.isDummy && "opacity-40 grayscale pointer-events-none border-dashed"
-                          )}
-                        />
-                      )}
+                {roundMatches.map((match) => (
+                  <div key={match.id} className="relative w-full flex items-center group">
+                    {/* Connecteur droite */}
+                    {colIndex < mainRounds.length - 1 && (
+                      <div className="absolute top-1/2 -right-3 md:-right-5 w-3 md:w-5 border-t border-border/50 z-0" />
+                    )}
+                    {/* Connecteur gauche */}
+                    {colIndex > 0 && (
+                      <div className="absolute top-1/2 -left-3 md:-left-5 w-3 md:w-5 border-t border-border/50 z-0" />
+                    )}
+                    <div className="relative z-10 w-full">
+                      <BracketMatchCard
+                        match={match}
+                        onSave={onSaveMatch}
+                        isDummy={match.isDummy}
+                      />
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             );
           })}
 
+          {/* Trophée vainqueur */}
           {status.status === 'completed' && status.winner && (
-            <div className="flex flex-col justify-center flex-1 min-w-[200px] pl-2 md:pl-4">
-              <div className="bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border border-amber-300 dark:border-amber-700/50 rounded-xl p-3 md:p-4 text-center shadow-lg transform transition-transform hover:scale-105 duration-300 w-full">
-                <Trophy className="w-6 h-6 md:w-8 md:h-8 mx-auto text-amber-600 dark:text-amber-400 mb-2 md:mb-3" />
-                <h4 className="text-[10px] md:text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-widest mb-1">Vainqueur</h4>
-                <p className="text-sm md:text-lg font-black text-amber-900 dark:text-amber-100 truncate">{cleanTeamName(status.winner)}</p>
+            <div className="flex flex-col justify-center flex-none w-[120px] pl-2">
+              <div className="bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border border-amber-300 dark:border-amber-700/50 rounded-xl p-3 text-center shadow-lg">
+                <Trophy className="w-6 h-6 mx-auto text-amber-600 dark:text-amber-400 mb-1.5" />
+                <p className="text-[9px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-widest mb-1">Vainqueur</p>
+                <p className="text-xs font-black text-amber-900 dark:text-amber-100 leading-tight">{cleanTeamName(status.winner)}</p>
               </div>
             </div>
           )}
         </div>
+
+        {/* 3e Place — séparée sous le bracket */}
+        {thirdPlaceMatch && (
+          <div className="mt-5 pt-4 border-t border-dashed border-border/40">
+            <div className="flex items-center gap-2 mb-2.5">
+              <Medal className="w-4 h-4 text-amber-600/70" />
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Match pour la 3e place</span>
+            </div>
+            <div className="max-w-[260px]">
+              <BracketMatchCard
+                match={thirdPlaceMatch}
+                onSave={onSaveMatch}
+                showMeta={true}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
