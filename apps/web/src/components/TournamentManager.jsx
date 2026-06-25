@@ -130,13 +130,11 @@ const TournamentManager = ({ competition }) => {
     }
   };
 
+  const isReadyForPools = teams.length >= 4 && teams.length % 4 === 0;
+
   const handleAddTeam = async (e) => {
     e.preventDefault();
     if (!newTeam.trim()) return;
-    if (teams.length >= 24) {
-      toast.error('Le nombre maximum de 24 équipes est atteint.');
-      return;
-    }
     try {
       const { data: record, error } = await supabase.from('tournament_teams').insert({
         competitionId: competition.id, teamName: newTeam.trim()
@@ -145,7 +143,6 @@ const TournamentManager = ({ competition }) => {
       setTeams([...teams, record]);
       setNewTeam('');
       toast.success('Équipe ajoutée');
-      if (teams.length + 1 === 24) setActiveTab('assignment');
     } catch {
       toast.error("Erreur lors de l'ajout de l'équipe");
     }
@@ -270,7 +267,7 @@ const TournamentManager = ({ competition }) => {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full min-w-[500px]">
           <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 h-auto">
             <TabsTrigger value="teams" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">1. Équipes</TabsTrigger>
-            <TabsTrigger value="assignment" disabled={teams.length < 24 && pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">2. Répartition</TabsTrigger>
+            <TabsTrigger value="assignment" disabled={!isReadyForPools && pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">2. Répartition</TabsTrigger>
             <TabsTrigger value="pools" disabled={pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">3. Poules</TabsTrigger>
             <TabsTrigger
               value="knockout"
@@ -292,7 +289,12 @@ const TournamentManager = ({ competition }) => {
             <CardHeader>
               <CardTitle className="text-lg flex justify-between items-center">
                 Inscrire des équipes
-                <Badge variant={teams.length === 24 ? 'default' : 'secondary'}>{teams.length} / 24</Badge>
+                <Badge variant={isReadyForPools ? 'default' : 'secondary'}>
+                  {teams.length} équipe{teams.length !== 1 ? 's' : ''}
+                  {teams.length >= 4 && teams.length % 4 !== 0 && (
+                    <span className="ml-1 text-destructive">— pas un multiple de 4</span>
+                  )}
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -304,9 +306,9 @@ const TournamentManager = ({ competition }) => {
                       value={newTeam}
                       onChange={(e) => setNewTeam(e.target.value)}
                       className="bg-background min-h-[44px]"
-                      disabled={teams.length >= 24 || isLocked}
+                      disabled={isLocked}
                     />
-                    <Button type="submit" disabled={!newTeam.trim() || teams.length >= 24 || isLocked} className="min-h-[44px]">
+                    <Button type="submit" disabled={!newTeam.trim() || isLocked} className="min-h-[44px]">
                       <Plus className="w-4 h-4 mr-2" /> Ajouter
                     </Button>
                   </form>
@@ -314,7 +316,7 @@ const TournamentManager = ({ competition }) => {
                     {teams.map(team => (
                       <div key={team.id} className="flex items-center justify-between bg-muted p-2 rounded-lg border">
                         <ClubBadge teamName={team.teamName} className="font-medium text-sm truncate" />
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="h-10 w-10 text-destructive" disabled={pools.length > 0 || isLocked}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="h-10 w-10 text-destructive" disabled={pools.length > 0 || isLocked} title="Supprimer l'équipe">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -323,10 +325,21 @@ const TournamentManager = ({ competition }) => {
                 </div>
 
                 <div className="w-full lg:w-64 space-y-4 lg:border-l lg:pl-8 flex flex-col justify-center">
-                  <p className="text-sm text-muted-foreground">Une fois les 24 équipes inscrites, passez à l'étape de répartition des poules.</p>
+                  {teams.length > 0 && teams.length % 4 !== 0 ? (
+                    <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                      Le nombre d'équipes doit être un multiple de 4.<br />
+                      Il manque <strong>{4 - (teams.length % 4)}</strong> équipe{4 - (teams.length % 4) > 1 ? 's' : ''}.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {teams.length >= 4
+                        ? `${teams.length} équipes → ${teams.length / 4} poule${teams.length / 4 > 1 ? 's' : ''} de 4`
+                        : 'Ajoutez au moins 4 équipes (multiple de 4) pour créer les poules.'}
+                    </p>
+                  )}
                   <Button
                     onClick={() => setActiveTab('assignment')}
-                    disabled={teams.length < 24}
+                    disabled={!isReadyForPools}
                     className="w-full py-6 min-h-[44px]"
                   >
                     Répartir les Poules <ArrowRight className="w-4 h-4 ml-2" />

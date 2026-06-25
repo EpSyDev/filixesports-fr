@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,18 +7,26 @@ import { Progress } from '@/components/ui/progress';
 import { X, RotateCcw, Lock } from 'lucide-react';
 import ClubBadge from './ClubBadge';
 
-const INITIAL_POOLS = [
-  { id: 1, name: 'Poule A', teams: [] },
-  { id: 2, name: 'Poule B', teams: [] },
-  { id: 3, name: 'Poule C', teams: [] },
-  { id: 4, name: 'Poule D', teams: [] },
-  { id: 5, name: 'Poule E', teams: [] },
-  { id: 6, name: 'Poule F', teams: [] },
-];
+const POOL_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const generateInitialPools = (numPools) =>
+  Array.from({ length: numPools }, (_, i) => ({
+    id: i + 1,
+    name: `Poule ${POOL_LETTERS[i] ?? i + 1}`,
+    teams: []
+  }));
 
 const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, setQualifiedTeams, isLocked = false }) => {
+  const numPools = Math.floor(teams.length / 4);
+
   const [availableTeams, setAvailableTeams] = useState([]);
-  const [pools, setPools] = useState(INITIAL_POOLS);
+  const [pools, setPools] = useState(() => generateInitialPools(numPools));
+
+  // Si le nombre d'équipes change (reset), on réinitialise les poules
+  useEffect(() => {
+    setPools(generateInitialPools(numPools));
+    setAvailableTeams(teams);
+  }, [numPools]);
 
   useEffect(() => {
     const assignedTeamIds = new Set(pools.flatMap(p => p.teams.map(t => t.id)));
@@ -45,7 +53,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
     e.preventDefault();
     const teamId = e.dataTransfer.getData('teamId');
     const sourcePoolId = e.dataTransfer.getData('sourcePoolId');
-    
+
     const targetPool = pools.find(p => p.id === targetPoolId);
     if (targetPool.teams.length >= 4 && sourcePoolId !== String(targetPoolId)) return;
 
@@ -54,7 +62,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
       const sourcePool = pools.find(p => p.id === parseInt(sourcePoolId));
       teamToMove = sourcePool.teams.find(t => t.id === teamId);
       if (!teamToMove) return;
-      
+
       setPools(prev => prev.map(p => {
         if (p.id === parseInt(sourcePoolId)) return { ...p, teams: p.teams.filter(t => t.id !== teamId) };
         if (p.id === targetPoolId) return { ...p, teams: [...p.teams, teamToMove] };
@@ -63,7 +71,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
     } else {
       teamToMove = availableTeams.find(t => t.id === teamId);
       if (!teamToMove) return;
-      
+
       setAvailableTeams(prev => prev.filter(t => t.id !== teamId));
       setPools(prev => prev.map(p => p.id === targetPoolId ? { ...p, teams: [...p.teams, teamToMove] } : p));
     }
@@ -74,12 +82,10 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
     e.preventDefault();
     const teamId = e.dataTransfer.getData('teamId');
     const sourcePoolId = e.dataTransfer.getData('sourcePoolId');
-    
     if (!sourcePoolId) return;
 
     const sourcePool = pools.find(p => p.id === parseInt(sourcePoolId));
     const teamToMove = sourcePool.teams.find(t => t.id === teamId);
-    
     if (teamToMove) {
       setPools(prev => prev.map(p => p.id === parseInt(sourcePoolId) ? { ...p, teams: p.teams.filter(t => t.id !== teamId) } : p));
       setAvailableTeams(prev => [...prev, teamToMove]);
@@ -94,13 +100,12 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
 
   const clearAll = () => {
     if (isLocked) return;
-    setPools(INITIAL_POOLS);
+    setPools(generateInitialPools(numPools));
     setAvailableTeams(teams);
   };
 
   const assignedCount = pools.reduce((acc, p) => acc + p.teams.length, 0);
-  const totalTeams = teams.length;
-  const progress = totalTeams > 0 ? (assignedCount / totalTeams) * 100 : 0;
+  const progress = teams.length > 0 ? (assignedCount / teams.length) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -115,13 +120,13 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
         <div className="space-y-1 flex-1 max-w-md">
           <div className="flex justify-between text-sm font-medium">
             <span>Progression de la répartition</span>
-            <span>{assignedCount} / {totalTeams} équipes</span>
+            <span>{assignedCount} / {teams.length} équipes — {numPools} poule{numPools > 1 ? 's' : ''} de 4</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
-        <Button 
-          variant="outline" 
-          onClick={clearAll} 
+        <Button
+          variant="outline"
+          onClick={clearAll}
           disabled={isLocked}
           className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
         >
@@ -132,8 +137,8 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {pools.map(pool => (
-            <Card 
-              key={pool.id} 
+            <Card
+              key={pool.id}
               className={`border-2 transition-colors ${pool.teams.length === 4 ? 'border-primary/50 bg-primary/5' : 'border-dashed border-border bg-card'} ${isLocked ? 'opacity-90' : ''}`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDropToPool(e, pool.id)}
@@ -146,7 +151,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
               </CardHeader>
               <CardContent className="p-3 min-h-[180px] space-y-2">
                 {pool.teams.map(team => (
-                  <div 
+                  <div
                     key={team.id}
                     draggable={!isLocked}
                     onDragStart={(e) => handleDragStart(e, team, pool.id)}
@@ -171,7 +176,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
         </div>
 
         <div className="lg:col-span-4">
-          <Card 
+          <Card
             className={`h-full border-border bg-muted/10 ${isLocked ? 'opacity-90' : ''}`}
             onDragOver={handleDragOver}
             onDrop={handleDropToAvailable}
@@ -184,7 +189,7 @@ const PoolAssignmentManager = ({ teams, onAssignmentsChange, qualifiedTeams, set
             </CardHeader>
             <CardContent className="p-4 max-h-[600px] overflow-y-auto space-y-2 custom-scrollbar">
               {availableTeams.map(team => (
-                <div 
+                <div
                   key={team.id}
                   draggable={!isLocked}
                   onDragStart={(e) => handleDragStart(e, team)}

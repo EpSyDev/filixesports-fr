@@ -74,7 +74,7 @@ export const generatePoolStandings = (pools, competitionId) => {
 };
 
 export const validatePoolAssignments = (pools) => {
-  if (!pools || pools.length !== 6) return false;
+  if (!pools || pools.length === 0) return false;
   const allTeams = new Set();
   for (const pool of pools) {
     if (!pool.teams || pool.teams.length !== 4) return false;
@@ -83,7 +83,7 @@ export const validatePoolAssignments = (pools) => {
       allTeams.add(team.id);
     }
   }
-  return allTeams.size === 24;
+  return allTeams.size === pools.length * 4;
 };
 
 export const calculateLeagueStandings = (matches, teams) => {
