@@ -144,14 +144,25 @@ const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
                         <div className="hidden md:block absolute top-1/2 -left-2 md:-left-3 w-2 md:w-3 border-t-2 border-border/60 z-0 transition-colors group-hover:border-primary/40" />
                       )}
 
-                      <MatchResultForm 
-                        match={match} 
-                        onSave={onSaveMatch} 
-                        className={cn(
-                          "relative z-10",
-                          match.isDummy && "opacity-40 grayscale pointer-events-none border-dashed"
-                        )}
-                      />
+                      {/* Match BYE : équipe exemptée, pas interactive */}
+                      {match.homeTeam && !match.awayTeam && match.status === 'played' ? (
+                        <div className={cn(
+                          "relative z-10 w-full border border-dashed rounded-xl p-3 bg-muted/10 text-center opacity-60 select-none",
+                        )}>
+                          <p className="text-xs text-muted-foreground mb-0.5">Exemption</p>
+                          <p className="font-bold text-sm">{match.homeTeam}</p>
+                          <Badge variant="secondary" className="text-[9px] mt-1 py-0 px-1.5">BYE</Badge>
+                        </div>
+                      ) : (
+                        <MatchResultForm
+                          match={match}
+                          onSave={onSaveMatch}
+                          className={cn(
+                            "relative z-10",
+                            match.isDummy && "opacity-40 grayscale pointer-events-none border-dashed"
+                          )}
+                        />
+                      )}
                     </div>
                   );
                 })}

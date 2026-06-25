@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import MatchResultForm from './MatchResultForm';
+import InlineMatchScoreInput from './InlineMatchScoreInput';
 import PoolAssignmentManager from './PoolAssignmentManager';
 import PoolGenerationHandler from './PoolGenerationHandler';
 import KnockoutBracketManager from './KnockoutBracketManager';
 import ClubBadge from './ClubBadge';
 import { useCompetitionLock } from '@/hooks/useCompetitionLock';
-import { calculatePoolStandings, updateKnockoutBracketAfterMatch, generateKnockoutBracketFromPools } from '@/utils/competitionUtils';
+import { calculatePoolStandings } from '@/utils/competitionUtils';
 import { toast } from 'sonner';
 import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,13 +26,12 @@ const TournamentManager = ({ competition }) => {
   const [poolStandings, setPoolStandings] = useState([]);
   const [knockoutMatches, setKnockoutMatches] = useState([]);
   const [qualifiedTeams, setQualifiedTeams] = useState([]);
-  
+
   const [newTeam, setNewTeam] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('teams');
   const [isUpdatingStandings, setIsUpdatingStandings] = useState(false);
-  const [isGeneratingBracket, setIsGeneratingBracket] = useState(false);
-  
+
   const [draftPools, setDraftPools] = useState([]);
   const [isModifyingPools, setIsModifyingPools] = useState(false);
 
@@ -48,7 +47,7 @@ const TournamentManager = ({ competition }) => {
       const [teamsRes, poolsRes, pMatchesRes, pStandingsRes, kMatchesRes] = await Promise.all([
         supabase.from('tournament_teams').select('*').eq('competitionId', competition.id),
         supabase.from('tournament_pools').select('*').eq('competitionId', competition.id).order('poolId', { ascending: true }),
-        supabase.from('pool_matches').select('*').eq('competitionId', competition.id),
+        supabase.from('pool_matches').select('*').eq('competitionId', competition.id).order('matchday', { ascending: true }),
         supabase.from('pool_standings').select('*').eq('competitionId', competition.id).order('rank', { ascending: true }),
         supabase.from('knockout_matches').select('*').eq('competitionId', competition.id).order('matchNumber', { ascending: true })
       ]);
@@ -61,11 +60,11 @@ const TournamentManager = ({ competition }) => {
       setKnockoutMatches(km);
       setQualifiedTeams(ps.filter(s => s.qualified));
 
-      if (kMatchesRes.length > 0) {
+      if (km.length > 0) {
         setActiveTab('knockout');
-      } else if (poolsRes.length > 0) {
+      } else if (p.length > 0) {
         setActiveTab('pools');
-      } else if (teamsRes.length === 24) {
+      } else if (t.length === 24) {
         setActiveTab('assignment');
       } else {
         setActiveTab('teams');
@@ -79,31 +78,7 @@ const TournamentManager = ({ competition }) => {
 
   const handleToggleLock = async () => {
     try {
-      const newLockState = await toggleLock();
-      
-      if (newLockState && qualifiedTeams.length >= 2 && knockoutMatches.length === 0) {
-        setIsGeneratingBracket(true);
-        const loadingToast = toast.loading("Génération de l'arbre final en cours...");
-        
-        try {
-          const matchesToCreate = generateKnockoutBracketFromPools(competition.id, qualifiedTeams);
-          if (matchesToCreate.length > 0) {
-            const { error: kErr } = await supabase.from('knockout_matches').insert(matchesToCreate);
-            if (kErr) throw kErr;
-          }
-          
-          await refreshKnockoutMatches();
-          toast.dismiss(loadingToast);
-          toast.success("Arbre final généré avec succès !");
-          setActiveTab('knockout');
-        } catch (err) {
-          toast.dismiss(loadingToast);
-          toast.error("Erreur lors de la génération de l'arbre.");
-          console.error(err);
-        } finally {
-          setIsGeneratingBracket(false);
-        }
-      }
+      await toggleLock();
     } catch (err) {
       console.error(err);
     }
@@ -112,23 +87,12 @@ const TournamentManager = ({ competition }) => {
   const refreshStandings = async () => {
     setIsUpdatingStandings(true);
     try {
-      const { data: pStandingsData } = await supabase.from('pool_standings').select('*').eq('competitionId', competition.id).order('rank', { ascending: true });
-      const ps2 = pStandingsData || [];
-      setPoolStandings(ps2);
-      setQualifiedTeams(ps2.filter(s => s.qualified));
-    } catch (error) {
-      console.error("Error refreshing standings:", error);
+      const { data } = await supabase.from('pool_standings').select('*').eq('competitionId', competition.id).order('rank', { ascending: true });
+      const ps = data || [];
+      setPoolStandings(ps);
+      setQualifiedTeams(ps.filter(s => s.qualified));
     } finally {
       setIsUpdatingStandings(false);
-    }
-  };
-
-  const refreshKnockoutMatches = async () => {
-    try {
-      const { data: kMatchesData } = await supabase.from('knockout_matches').select('*').eq('competitionId', competition.id).order('matchNumber', { ascending: true });
-      setKnockoutMatches(kMatchesData || []);
-    } catch (error) {
-      console.error("Error refreshing knockout matches:", error);
     }
   };
 
@@ -139,24 +103,19 @@ const TournamentManager = ({ competition }) => {
       toast.error("Les sélections sont verrouillées. Déverrouillez pour modifier.");
       return;
     }
-
     const isSelected = qualifiedTeams.some(t => t.id === team.id);
     setQualifiedTeams(prev => isSelected ? prev.filter(t => t.id !== team.id) : [...prev, team]);
-
     try {
       await supabase.from('pool_standings').update({ qualified: !isSelected }).eq('id', team.id);
-    } catch (error) {
-      console.error("Failed to update qualified status", error);
+    } catch {
       toast.error("Erreur de synchronisation.");
     }
   };
 
   const handleClearSelection = async () => {
     if (isLocked) return;
-    
     const previouslySelected = [...qualifiedTeams];
     setQualifiedTeams([]);
-    
     try {
       await Promise.all(previouslySelected.map(t =>
         supabase.from('pool_standings').update({ qualified: false }).eq('id', t.id)
@@ -174,7 +133,6 @@ const TournamentManager = ({ competition }) => {
       toast.error('Le nombre maximum de 24 équipes est atteint.');
       return;
     }
-    
     try {
       const { data: record, error } = await supabase.from('tournament_teams').insert({
         competitionId: competition.id, teamName: newTeam.trim()
@@ -183,12 +141,9 @@ const TournamentManager = ({ competition }) => {
       setTeams([...teams, record]);
       setNewTeam('');
       toast.success('Équipe ajoutée');
-      
-      if (teams.length + 1 === 24) {
-        setActiveTab('assignment');
-      }
-    } catch (error) {
-      toast.error('Erreur lors de l\'ajout de l\'équipe');
+      if (teams.length + 1 === 24) setActiveTab('assignment');
+    } catch {
+      toast.error("Erreur lors de l'ajout de l'équipe");
     }
   };
 
@@ -197,76 +152,42 @@ const TournamentManager = ({ competition }) => {
       await supabase.from('tournament_teams').delete().eq('id', id);
       setTeams(teams.filter(t => t.id !== id));
       toast.success('Équipe supprimée');
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
 
-  const handleSavePoolMatch = async (updatedMatch) => {
-    try {
-      const { data: saved, error } = await supabase.from('pool_matches').update({
-        homeScore: updatedMatch.homeScore, awayScore: updatedMatch.awayScore, status: updatedMatch.status
-      }).eq('id', updatedMatch.id).select().single();
-      if (error) throw error;
-      const newPoolMatches = poolMatches.map(m => m.id === saved.id ? saved : m);
-      setPoolMatches(newPoolMatches);
+  // Sauvegarde inline d'un match de poule (signature InlineMatchScoreInput)
+  const handleSavePoolMatch = async (matchId, homeScore, awayScore) => {
+    const hs = homeScore !== '' ? Number(homeScore) : null;
+    const as_ = awayScore !== '' ? Number(awayScore) : null;
+    const status = hs !== null && as_ !== null ? 'played' : 'scheduled';
 
-      const matchesInThisPool = newPoolMatches.filter(m => m.poolId === updatedMatch.poolId);
-      const teamsInThisPool = poolStandings.filter(s => s.poolId === updatedMatch.poolId).map(s => ({ teamName: s.teamName }));
-      
-      const newStandings = calculatePoolStandings(matchesInThisPool, teamsInThisPool);
-      
-      for (const ns of newStandings) {
-        const existingRec = poolStandings.find(s => s.poolId === updatedMatch.poolId && s.teamName === ns.teamName);
-        if (existingRec) {
-          await supabase.from('pool_standings').update({
-            played: ns.played, points: ns.points, goalsFor: ns.goalsFor, goalsAgainst: ns.goalsAgainst, rank: ns.rank
-          }).eq('id', existingRec.id);
-        }
+    const { data: saved, error } = await supabase.from('pool_matches').update({
+      homeScore: hs, awayScore: as_, status
+    }).eq('id', matchId).select().single();
+    if (error) throw error;
+
+    const newPoolMatches = poolMatches.map(m => m.id === saved.id ? saved : m);
+    setPoolMatches(newPoolMatches);
+
+    const matchesInPool = newPoolMatches.filter(m => m.poolId === saved.poolId);
+    const teamsInPool = poolStandings
+      .filter(s => s.poolId === saved.poolId)
+      .map(s => ({ teamName: s.teamName }));
+    const newStandings = calculatePoolStandings(matchesInPool, teamsInPool);
+
+    for (const ns of newStandings) {
+      const existingRec = poolStandings.find(s => s.poolId === saved.poolId && s.teamName === ns.teamName);
+      if (existingRec) {
+        await supabase.from('pool_standings').update({
+          played: ns.played, won: ns.won, drawn: ns.drawn, lost: ns.lost,
+          points: ns.points, goalsFor: ns.goalsFor, goalsAgainst: ns.goalsAgainst, rank: ns.rank
+        }).eq('id', existingRec.id);
       }
-      
-      await refreshStandings();
-    } catch (error) {
-      console.error(error);
-      throw error;
     }
-  };
 
-  const handleSaveKnockoutMatch = async (updatedMatch) => {
-    try {
-      let winner = null;
-      if (updatedMatch.homeScore !== null && updatedMatch.awayScore !== null) {
-        if (updatedMatch.homeScore > updatedMatch.awayScore) winner = updatedMatch.homeTeam;
-        else if (updatedMatch.awayScore > updatedMatch.homeScore) winner = updatedMatch.awayTeam;
-        else {
-          toast.error('Match nul non autorisé en phase éliminatoire. Veuillez inclure les TAB.');
-          throw new Error('Draw not allowed');
-        }
-      }
-
-      const { data: saved, error: saveErr } = await supabase.from('knockout_matches').update({
-        homeScore: updatedMatch.homeScore, awayScore: updatedMatch.awayScore,
-        winner, status: updatedMatch.status
-      }).eq('id', updatedMatch.id).select().single();
-      if (saveErr) throw saveErr;
-
-      const newKnockoutMatches = knockoutMatches.map(m => m.id === saved.id ? saved : m);
-      setKnockoutMatches(newKnockoutMatches);
-
-      if (winner) {
-        const advancement = updateKnockoutBracketAfterMatch(updatedMatch, winner, newKnockoutMatches);
-        if (advancement) {
-          await supabase.from('knockout_matches').update(advancement.updates).eq('id', advancement.matchId);
-        } else if (updatedMatch.round === '2') {
-          toast.success(`Le tournoi est terminé ! Le vainqueur est ${winner}`);
-        }
-      }
-
-      await refreshKnockoutMatches();
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    await refreshStandings();
   };
 
   const handleResetPools = async () => {
@@ -275,7 +196,7 @@ const TournamentManager = ({ competition }) => {
       return;
     }
     if (!window.confirm('Êtes-vous sûr de vouloir réinitialiser les poules ? Tous les matchs planifiés seront supprimés.')) return;
-    
+
     try {
       const poolMatchIds = poolMatches.map(m => m.id);
       const poolStandingIds = poolStandings.map(s => s.id);
@@ -295,25 +216,30 @@ const TournamentManager = ({ competition }) => {
           supabase.from('tournament_teams').update({ poolId: null }).eq('id', t.id)
         ));
       }
-      
+
       setIsModifyingPools(true);
       setActiveTab('assignment');
       await fetchTournamentData();
       toast.success('Poules réinitialisées');
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la réinitialisation');
     }
   };
 
   const handleTabChange = (value) => {
     if (value === 'knockout' && !isLocked && knockoutMatches.length === 0) {
-      toast.error("Verrouillez d'abord les sélections pour générer l'arbre.");
+      toast.error("Verrouillez d'abord les sélections pour accéder à la phase finale.");
       return;
     }
     setActiveTab(value);
   };
 
-  if (loading) return <div className="space-y-4"><Skeleton className="h-24 w-full rounded-xl" /><Skeleton className="h-96 w-full rounded-xl" /></div>;
+  if (loading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-96 w-full rounded-xl" />
+    </div>
+  );
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -330,7 +256,7 @@ const TournamentManager = ({ competition }) => {
               variant={isLocked ? "destructive" : "outline"}
               size="sm"
               onClick={handleToggleLock}
-              disabled={lockLoading || isGeneratingBracket}
+              disabled={lockLoading}
               className={cn("gap-2 transition-colors min-h-[44px] flex-1 sm:flex-none", !isLocked && "text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10")}
             >
               {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
@@ -347,8 +273,8 @@ const TournamentManager = ({ competition }) => {
             <TabsTrigger value="teams" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">1. Équipes</TabsTrigger>
             <TabsTrigger value="assignment" disabled={teams.length < 24 && pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">2. Répartition</TabsTrigger>
             <TabsTrigger value="pools" disabled={pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">3. Poules</TabsTrigger>
-            <TabsTrigger 
-              value="knockout" 
+            <TabsTrigger
+              value="knockout"
               className={cn(
                 "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all py-2.5 min-h-[44px]",
                 (!isLocked && knockoutMatches.length === 0) && "opacity-50 cursor-not-allowed"
@@ -361,6 +287,7 @@ const TournamentManager = ({ competition }) => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        {/* === ÉQUIPES === */}
         <TabsContent value="teams" className="space-y-6">
           <Card className="bg-card border-border shadow-sm">
             <CardHeader>
@@ -373,14 +300,16 @@ const TournamentManager = ({ competition }) => {
               <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex-1 space-y-4">
                   <form onSubmit={handleAddTeam} className="flex gap-2">
-                    <Input 
-                      placeholder="Nom de l'équipe" 
-                      value={newTeam} 
+                    <Input
+                      placeholder="Nom de l'équipe"
+                      value={newTeam}
                       onChange={(e) => setNewTeam(e.target.value)}
                       className="bg-background min-h-[44px]"
                       disabled={teams.length >= 24 || isLocked}
                     />
-                    <Button type="submit" disabled={!newTeam.trim() || teams.length >= 24 || isLocked} className="min-h-[44px]"><Plus className="w-4 h-4 mr-2"/> Ajouter</Button>
+                    <Button type="submit" disabled={!newTeam.trim() || teams.length >= 24 || isLocked} className="min-h-[44px]">
+                      <Plus className="w-4 h-4 mr-2" /> Ajouter
+                    </Button>
                   </form>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {teams.map(team => (
@@ -393,11 +322,11 @@ const TournamentManager = ({ competition }) => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="w-full lg:w-64 space-y-4 lg:border-l lg:pl-8 flex flex-col justify-center">
                   <p className="text-sm text-muted-foreground">Une fois les 24 équipes inscrites, passez à l'étape de répartition des poules.</p>
-                  <Button 
-                    onClick={() => setActiveTab('assignment')} 
+                  <Button
+                    onClick={() => setActiveTab('assignment')}
                     disabled={teams.length < 24}
                     className="w-full py-6 min-h-[44px]"
                   >
@@ -409,6 +338,7 @@ const TournamentManager = ({ competition }) => {
           </Card>
         </TabsContent>
 
+        {/* === RÉPARTITION === */}
         <TabsContent value="assignment" className="space-y-6">
           {pools.length > 0 && !isModifyingPools ? (
             <Card className="bg-card border-border shadow-sm text-center py-12">
@@ -425,25 +355,26 @@ const TournamentManager = ({ competition }) => {
             </Card>
           ) : (
             <div className="space-y-4">
-              <PoolAssignmentManager 
-                teams={teams} 
+              <PoolAssignmentManager
+                teams={teams}
                 onAssignmentsChange={setDraftPools}
                 qualifiedTeams={qualifiedTeams}
                 setQualifiedTeams={setQualifiedTeams}
                 isLocked={isLocked}
               />
-              <PoolGenerationHandler 
-                competitionId={competition.id} 
-                pools={draftPools} 
+              <PoolGenerationHandler
+                competitionId={competition.id}
+                pools={draftPools}
                 onSuccess={() => {
                   setIsModifyingPools(false);
                   fetchTournamentData();
-                }} 
+                }}
               />
             </div>
           )}
         </TabsContent>
 
+        {/* === POULES === */}
         <TabsContent value="pools" className="space-y-6">
           {pools.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-muted/20">
@@ -455,8 +386,13 @@ const TournamentManager = ({ competition }) => {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="text-xl font-bold text-foreground">Phase de Poules</h3>
                   {allPoolMatchesPlayed && knockoutMatches.length === 0 && (
-                    <Button size="sm" onClick={handleToggleLock} disabled={lockLoading || isGeneratingBracket} className="gap-2 animate-pulse bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto min-h-[44px]">
-                      Verrouiller et générer l'arbre <ArrowRight className="w-4 h-4" />
+                    <Button
+                      size="sm"
+                      onClick={handleToggleLock}
+                      disabled={lockLoading}
+                      className="gap-2 animate-pulse bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto min-h-[44px]"
+                    >
+                      Verrouiller les sélections <ArrowRight className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
@@ -466,16 +402,16 @@ const TournamentManager = ({ competition }) => {
                     <h4 className="font-semibold">Sélection des qualifiés</h4>
                     <p className="text-sm text-muted-foreground">Cliquez sur une équipe dans le classement pour la sélectionner pour la phase finale.</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
                     <div className="text-sm font-medium">
                       <span className={cn(qualifiedTeams.length >= 2 ? "text-emerald-600" : "text-primary")}>
                         {qualifiedTeams.length}
-                      </span> équipe{qualifiedTeams.length > 1 ? 's' : ''} sélectionnée{qualifiedTeams.length > 1 ? 's' : ''}
+                      </span>{' '}équipe{qualifiedTeams.length > 1 ? 's' : ''} sélectionnée{qualifiedTeams.length > 1 ? 's' : ''}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={handleClearSelection}
                       disabled={qualifiedTeams.length === 0 || isLocked}
                       className="text-destructive hover:bg-destructive/10 border-destructive/20 min-h-[44px]"
@@ -487,88 +423,106 @@ const TournamentManager = ({ competition }) => {
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
-                {pools.map(pool => (
-                  <Card key={pool.id} className="bg-card border-border shadow-sm overflow-hidden flex flex-col relative">
-                    {isUpdatingStandings && (
-                      <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
-                        <Skeleton className="w-full h-full opacity-20" />
-                      </div>
-                    )}
-                    <CardHeader className="bg-muted/30 pb-3 border-b">
-                      <CardTitle className="text-lg">{pool.poolName}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1 flex flex-col">
-                      <div className="overflow-x-auto custom-scrollbar">
-                        <Table className="min-w-[400px]">
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-8">#</TableHead>
-                              <TableHead>Équipe</TableHead>
-                              <TableHead className="text-center">Pts</TableHead>
-                              <TableHead className="text-center">Diff</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {poolStandings.filter(s => s.poolId === pool.poolId).map((s) => {
-                              const isSelected = qualifiedTeams.some(qt => qt.id === s.id);
-                              
-                              return (
-                                <TableRow 
-                                  key={s.id} 
-                                  onClick={() => toggleTeamSelection(s)}
-                                  className={cn(
-                                    "transition-colors group",
-                                    !isLocked ? "cursor-pointer hover:bg-muted/60" : "cursor-default",
-                                    isSelected 
-                                      ? "bg-green-100/50 dark:bg-emerald-950/40 hover:bg-green-100 dark:hover:bg-emerald-900/50 border-l-4 border-l-emerald-500" 
-                                      : "",
-                                    isLocked && "opacity-90"
-                                  )}
-                                >
-                                  <TableCell className={cn(isSelected && "pl-2")}>{s.rank}</TableCell>
-                                  <TableCell className="flex items-center gap-2 font-medium">
-                                    <ClubBadge teamName={s.teamName} />
-                                    {isSelected && (
-                                      <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/30">
-                                        Sélectionné
-                                      </Badge>
+                {pools.map(pool => {
+                  const matchesForPool = poolMatches.filter(m => m.poolId === pool.poolId);
+                  const matchdays = [...new Set(matchesForPool.map(m => m.matchday || 1))].sort((a, b) => a - b);
+
+                  return (
+                    <Card key={pool.id} className="bg-card border-border shadow-sm overflow-hidden flex flex-col relative">
+                      {isUpdatingStandings && (
+                        <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                          <Skeleton className="w-full h-full opacity-20" />
+                        </div>
+                      )}
+                      <CardHeader className="bg-muted/30 pb-3 border-b">
+                        <CardTitle className="text-lg">{pool.name || pool.poolId}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0 flex-1 flex flex-col">
+                        {/* Classement */}
+                        <div className="overflow-x-auto custom-scrollbar">
+                          <Table className="min-w-[400px]">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-8">#</TableHead>
+                                <TableHead>Équipe</TableHead>
+                                <TableHead className="text-center">J</TableHead>
+                                <TableHead className="text-center">Pts</TableHead>
+                                <TableHead className="text-center">Diff</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {poolStandings.filter(s => s.poolId === pool.poolId).map((s) => {
+                                const isSelected = qualifiedTeams.some(qt => qt.id === s.id);
+                                return (
+                                  <TableRow
+                                    key={s.id}
+                                    onClick={() => toggleTeamSelection(s)}
+                                    className={cn(
+                                      "transition-colors group",
+                                      !isLocked ? "cursor-pointer hover:bg-muted/60" : "cursor-default",
+                                      isSelected
+                                        ? "bg-green-100/50 dark:bg-emerald-950/40 hover:bg-green-100 dark:hover:bg-emerald-900/50 border-l-4 border-l-emerald-500"
+                                        : "",
+                                      isLocked && "opacity-90"
                                     )}
-                                  </TableCell>
-                                  <TableCell className="text-center font-bold text-primary">{s.points}</TableCell>
-                                  <TableCell className="text-center text-muted-foreground">{(s.goalsFor - s.goalsAgainst)}</TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      <div className="p-4 bg-muted/10 space-y-2 border-t mt-auto">
-                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Matchs</h4>
-                        {poolMatches.filter(m => m.poolId === pool.poolId).map(match => (
-                          <MatchResultForm 
-                            key={match.id} 
-                            match={match} 
-                            onSave={handleSavePoolMatch} 
-                          />
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                                  >
+                                    <TableCell className={cn(isSelected && "pl-2")}>{s.rank}</TableCell>
+                                    <TableCell className="flex items-center gap-2 font-medium">
+                                      <ClubBadge teamName={s.teamName} />
+                                      {isSelected && (
+                                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                                          Qualifié
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-center text-muted-foreground">{s.played}</TableCell>
+                                    <TableCell className="text-center font-bold text-primary">{s.points}</TableCell>
+                                    <TableCell className="text-center text-muted-foreground">{(s.goalsFor - s.goalsAgainst)}</TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+
+                        {/* Matchs groupés par journée */}
+                        <div className="p-4 bg-muted/10 border-t mt-auto space-y-1">
+                          {matchdays.map(day => (
+                            <div key={day}>
+                              <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2 pb-2">
+                                Journée {day}
+                              </h5>
+                              <div className="space-y-1.5">
+                                {matchesForPool
+                                  .filter(m => (m.matchday || 1) === day)
+                                  .map(match => (
+                                    <InlineMatchScoreInput
+                                      key={match.id}
+                                      match={match}
+                                      onSave={handleSavePoolMatch}
+                                    />
+                                  ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </>
           )}
         </TabsContent>
 
+        {/* === PHASE FINALE === */}
         <TabsContent value="knockout" className="space-y-6">
           <KnockoutBracketManager
             competitionId={competition.id}
             existingMatches={knockoutMatches}
             onMatchesGenerated={fetchTournamentData}
             qualifiedTeams={qualifiedTeams}
-            setQualifiedTeams={setQualifiedTeams}
             isLocked={isLocked}
-            onSaveMatch={handleSaveKnockoutMatch}
           />
         </TabsContent>
       </Tabs>

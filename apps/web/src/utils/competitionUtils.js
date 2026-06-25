@@ -43,6 +43,7 @@ export const generatePoolMatches = (pools, competitionId) => {
       allMatches.push({
         competitionId,
         poolId: pool.poolId,
+        matchday: m.matchday,
         homeTeam: m.homeTeam,
         awayTeam: m.awayTeam,
         status: 'scheduled'
@@ -391,4 +392,72 @@ export const isKnockoutMatchStarted = async (competitionId) => {
 
 export const validateQualifiedTeamsCount = (poolCount, qualifiedTeamsCount) => {
   return qualifiedTeamsCount >= 2;
+};
+
+// Quand une demi-finale est jouée, le perdant va au match de 3e place (round '1')
+export const getSemiLoserAdvancement = (loser, matchNumber, allMatches) => {
+  const thirdPlaceMatch = allMatches.find(m => String(m.round) === '1');
+  const isHome = matchNumber === 1;
+
+  if (thirdPlaceMatch) {
+    return {
+      isNew: false,
+      matchId: thirdPlaceMatch.id,
+      updates: isHome ? { homeTeam: loser } : { awayTeam: loser }
+    };
+  }
+  return null;
+};
+
+// Génère un bracket avec les paires du premier tour définies par l'admin.
+// firstRoundPairings: [{home: string|null, away: string|null|'BYE'}, ...]
+export const generateKnockoutBracketWithSeeding = (firstRoundPairings, competitionId) => {
+  const numFirstRoundMatches = firstRoundPairings.length;
+  const bracketSize = numFirstRoundMatches * 2;
+  const matches = [];
+
+  firstRoundPairings.forEach((pairing, i) => {
+    const isBye = !pairing.away || pairing.away === 'BYE';
+    matches.push({
+      competitionId,
+      round: String(bracketSize),
+      matchNumber: i + 1,
+      homeTeam: pairing.home || null,
+      awayTeam: isBye ? null : pairing.away,
+      winner: null,
+      status: 'scheduled'
+    });
+  });
+
+  // Rounds suivants vides
+  let r = bracketSize / 2;
+  while (r >= 2) {
+    for (let i = 0; i < r / 2; i++) {
+      matches.push({
+        competitionId,
+        round: String(r),
+        matchNumber: i + 1,
+        homeTeam: null,
+        awayTeam: null,
+        winner: null,
+        status: 'scheduled'
+      });
+    }
+    r = r / 2;
+  }
+
+  // Match de 3e place (petite finale) si au moins des demi-finales
+  if (bracketSize >= 4) {
+    matches.push({
+      competitionId,
+      round: '1',
+      matchNumber: 1,
+      homeTeam: null,
+      awayTeam: null,
+      winner: null,
+      status: 'scheduled'
+    });
+  }
+
+  return matches;
 };

@@ -121,16 +121,18 @@ const InlineMatchScoreInput = ({ match, onSave, onDelete }) => {
           )}
         </div>
         
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg ml-1"
-          onClick={handleDelete}
-          disabled={isSaving || isDeleting}
-          title="Supprimer le match"
-        >
-          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-        </Button>
+        {onDelete && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg ml-1"
+            onClick={handleDelete}
+            disabled={isSaving || isDeleting}
+            title="Supprimer le match"
+          >
+            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          </Button>
+        )}
       </div>
     </div>
   );
