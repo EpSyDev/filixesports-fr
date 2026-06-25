@@ -94,6 +94,7 @@ const StatsJoueursPage = () => {
                 {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
               </div>
             ) : (
+              <p className="text-xs text-muted-foreground text-right mb-2 sm:hidden">← Glissez pour voir plus →</p>
               <div className="bg-card border border-primary/25 rounded-2xl overflow-hidden overflow-x-auto shadow-2xl shadow-black/50">
                 <Table>
                   <TableHeader>
