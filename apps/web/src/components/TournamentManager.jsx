@@ -54,7 +54,7 @@ const TournamentManager = ({ competition }) => {
       const t = teamsRes.data || [], p = poolsRes.data || [], pm = pMatchesRes.data || [],
             km = kMatchesRes.data || [];
       // Normalise team → teamName pour tout le code aval
-      const ps = (pStandingsRes.data || []).map(s => ({ ...s, teamName: s.teamName ?? s.team }));
+      const ps = (pStandingsRes.data || []).map(s => ({ ...s, teamName: s.teamName || s.team }));
       setTeams(t);
       setPools(p);
       setPoolMatches(pm);

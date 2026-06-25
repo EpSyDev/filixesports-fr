@@ -61,6 +61,7 @@ export const generatePoolStandings = (pools, competitionId) => {
         competitionId,
         poolId: pool.poolId,
         team: team.teamName,
+        teamName: team.teamName,
         played: 0,
         points: 0,
         goalsFor: 0,
