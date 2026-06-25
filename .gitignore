@@ -11,3 +11,4 @@ apps/web/plugins/
 apps/web/tools/
 apps/pocketbase/
 .version
+.playwright-mcp/
