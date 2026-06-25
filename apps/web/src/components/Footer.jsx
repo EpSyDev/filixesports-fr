@@ -58,7 +58,7 @@ const Footer = () => {
               <a href="#" aria-label="YouTube" title="Lien à venir" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
                 <Youtube className="w-5 h-5" />
               </a>
-              <a href="#" aria-label="Discord" title="Lien à venir" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
+              <a href="https://discord.gg/Kyk8PX8WqJ" target="_blank" rel="noopener noreferrer" aria-label="Discord" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
                 <DiscordIcon className="w-5 h-5" />
               </a>
             </div>

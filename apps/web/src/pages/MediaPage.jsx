@@ -43,7 +43,7 @@ const MediaPage = () => {
             </motion.div>
 
             <Tabs defaultValue="photos" className="w-full">
-              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+              <TabsList className="flex w-auto mx-auto mb-8 h-auto p-1 gap-1">
                 <TabsTrigger value="photos" className="gap-2">
                   <Image className="w-4 h-4" />
                   Photos
@@ -62,7 +62,7 @@ const MediaPage = () => {
                     ))}
                   </div>
                 ) : photos.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
                     {photos.map((item, index) => (
                       <motion.div
                         key={item.id}
@@ -70,13 +70,13 @@ const MediaPage = () => {
                         whileInView={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                         viewport={{ once: true }}
-                        className="group relative aspect-video rounded-xl overflow-hidden bg-muted"
+                        className="group relative break-inside-avoid rounded-xl overflow-hidden bg-muted"
                       >
                         <img
                           src={item.url}
                           alt={item.title}
                           loading="lazy"
-                          className="w-full h-full object-contain transition-all duration-300 group-hover:scale-105"
+                          className="w-full h-auto block transition-all duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-4">
                           <div>
