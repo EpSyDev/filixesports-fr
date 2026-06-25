@@ -29,11 +29,11 @@ const CompositionPage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-8"
             >
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-foreground tracking-tight">
-                Tableau tactique
+              <h1 className="font-display uppercase text-5xl md:text-6xl mb-4">
+                Tableau <span className="text-primary">Tactique</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-                Choisissez la formation de chaque équipe et placez vos joueurs.
+                Choisissez la formation et placez les joueurs sur le terrain.
               </p>
             </motion.div>
 
