@@ -28,7 +28,20 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
     const winner = isPlayed
       ? (hs > as ? match.homeTeam : as > hs ? match.awayTeam : match.winner ?? null)
       : null;
-    onSave({ ...match, homeScore: hs, awayScore: as, status: isPlayed ? 'played' : status, winner, date: date ? new Date(date).toISOString() : null });
+    // N'envoyer que les colonnes existantes dans knockout_matches
+    onSave({
+      id: match.id,
+      competitionId: match.competitionId,
+      round: match.round,
+      matchNumber: match.matchNumber,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      homeScore: hs,
+      awayScore: as,
+      status: isPlayed ? 'played' : 'scheduled',
+      winner,
+      ...(match.date !== undefined && { date: date ? new Date(date).toISOString() : null }),
+    });
   };
 
   const homeWon = match.winner && match.winner === match.homeTeam;
