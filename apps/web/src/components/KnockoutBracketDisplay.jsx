@@ -1,31 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, RotateCcw, CheckCircle2, PlayCircle, Medal } from 'lucide-react';
+import { Trophy, RotateCcw, CheckCircle2, PlayCircle, Medal, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getKnockoutBracketStatus, checkIfRoundComplete, cleanTeamName } from '@/utils/competitionUtils';
 import { cn } from '@/lib/utils';
 
 // ── Carte compacte d'un match dans le bracket ──────────────────────────────
-const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) => {
+const BracketMatchCard = ({ match, onSave, isDummy = false }) => {
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
-  const [date, setDate] = useState('');
-  const [status, setStatus] = useState('scheduled');
 
   useEffect(() => {
     setHomeScore(match.homeScore != null ? String(match.homeScore) : '');
     setAwayScore(match.awayScore != null ? String(match.awayScore) : '');
-    setDate(match.date ? match.date.split('T')[0] : '');
-    setStatus(match.status || 'scheduled');
-  }, [match.id, match.homeScore, match.awayScore, match.status, match.date]);
+  }, [match.id, match.homeScore, match.awayScore]);
 
   const save = () => {
     if (!onSave || isDummy) return;
     const hs = homeScore !== '' ? Number(homeScore) : null;
     const as = awayScore !== '' ? Number(awayScore) : null;
-    // Attendre que les deux scores soient renseignés (ou les deux vides pour reset)
-    if ((hs === null) !== (as === null)) return;
     const isPlayed = hs !== null && as !== null;
     const winner = isPlayed
       ? (hs > as ? match.homeTeam : as > hs ? match.awayTeam : match.winner ?? null)
@@ -41,7 +35,6 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
       awayScore: as,
       status: isPlayed ? 'played' : 'scheduled',
       winner,
-      ...(match.date !== undefined && { date: date ? new Date(date).toISOString() : null }),
     });
   };
 
@@ -49,6 +42,10 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
   const awayWon = match.winner && match.winner === match.awayTeam;
   const noTeams = !match.homeTeam && !match.awayTeam;
   const disabled = isDummy || noTeams;
+
+  const dirty =
+    String(homeScore) !== (match.homeScore != null ? String(match.homeScore) : '') ||
+    String(awayScore) !== (match.awayScore != null ? String(match.awayScore) : '');
 
   // BYE
   if (match.homeTeam && !match.awayTeam && match.status === 'played') {
@@ -64,11 +61,11 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
     <div className={cn(
       "rounded-lg border bg-card shadow-sm overflow-hidden w-full",
       isDummy && "opacity-20 pointer-events-none border-dashed",
-      !disabled && "hover:shadow-md hover:border-primary/30 transition-all duration-150"
+      !disabled && "hover:border-primary/30 transition-colors duration-150"
     )}>
       {/* Équipe domicile */}
       <div className={cn(
-        "flex items-center gap-2 px-3 py-2 border-b border-border/40 transition-colors",
+        "flex items-center gap-2 px-3 py-2 border-b border-border/40",
         homeWon && "bg-primary/10"
       )}>
         <span className={cn(
@@ -77,25 +74,26 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
         )}>
           {match.homeTeam || '—'}
         </span>
-        {!disabled && (
+        {!disabled ? (
           <input
             type="number" min="0"
             value={homeScore}
             onChange={e => setHomeScore(e.target.value)}
-            onBlur={save}
+            onKeyDown={e => e.key === 'Enter' && save()}
             placeholder="—"
             className={cn(
               "w-8 h-6 text-center text-sm font-bold rounded bg-muted/40 border border-transparent focus:outline-none focus:border-primary/60 transition-colors",
               homeWon && "text-primary bg-primary/10"
             )}
           />
+        ) : (
+          <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>
         )}
-        {disabled && <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>}
       </div>
 
       {/* Équipe extérieure */}
       <div className={cn(
-        "flex items-center gap-2 px-3 py-2 transition-colors",
+        "flex items-center gap-2 px-3 py-2",
         awayWon && "bg-primary/10"
       )}>
         <span className={cn(
@@ -104,41 +102,29 @@ const BracketMatchCard = ({ match, onSave, isDummy = false, showMeta = false }) 
         )}>
           {match.awayTeam || '—'}
         </span>
-        {!disabled && (
+        {!disabled ? (
           <input
             type="number" min="0"
             value={awayScore}
             onChange={e => setAwayScore(e.target.value)}
-            onBlur={save}
+            onKeyDown={e => e.key === 'Enter' && save()}
             placeholder="—"
             className={cn(
               "w-8 h-6 text-center text-sm font-bold rounded bg-muted/40 border border-transparent focus:outline-none focus:border-primary/60 transition-colors",
               awayWon && "text-primary bg-primary/10"
             )}
           />
+        ) : (
+          <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>
         )}
-        {disabled && <span className="w-8 text-center text-muted-foreground/30 text-sm">—</span>}
       </div>
 
-      {/* Date + statut (3e place uniquement) */}
-      {showMeta && !noTeams && (
-        <div className="flex gap-1.5 px-3 py-1.5 border-t border-border/30 bg-muted/20">
-          <input
-            type="date" value={date}
-            onChange={e => setDate(e.target.value)}
-            onBlur={save}
-            className="flex-1 h-6 text-[10px] px-1.5 bg-transparent border border-border/40 rounded focus:outline-none focus:border-primary/50"
-          />
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            onBlur={save}
-            className="h-6 text-[10px] px-1 bg-muted/40 border border-border/40 rounded focus:outline-none"
-          >
-            <option value="scheduled">Planifié</option>
-            <option value="played">Joué</option>
-            <option value="cancelled">Annulé</option>
-          </select>
+      {/* Bouton Enregistrer — visible seulement si scores modifiés */}
+      {!disabled && dirty && (
+        <div className="px-2 py-1.5 border-t border-border/30 bg-muted/20">
+          <Button size="sm" onClick={save} className="w-full h-6 text-[10px] gap-1">
+            <Save className="w-3 h-3" /> Enregistrer
+          </Button>
         </div>
       )}
     </div>
@@ -199,9 +185,6 @@ const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
               <Trophy className="w-3 h-3" /> Terminé
             </Badge>
           )}
-          <Badge variant="outline" className="text-[10px] gap-1 py-0 px-2 h-5 text-muted-foreground">
-            Sauvegarde auto au blur
-          </Badge>
         </div>
         {onResetBracket && (
           <Button variant="outline" size="sm" onClick={onResetBracket} className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/20 shrink-0">
@@ -280,7 +263,6 @@ const KnockoutBracketDisplay = ({ matches, onSaveMatch, onResetBracket }) => {
               <BracketMatchCard
                 match={thirdPlaceMatch}
                 onSave={onSaveMatch}
-                showMeta={true}
               />
             </div>
           </div>
