@@ -14,8 +14,8 @@ const PalmaresPage = () => {
   return (
     <>
       <Helmet>
-        <title>Palmarès - Filix</title>
-        <meta name="description" content="Découvrez tous les trophées et titres remportés par le Filix Football Club" />
+        <title>Palmarès - KOTIYA FC</title>
+        <meta name="description" content="Découvrez tous les trophées et titres remportés par le KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -29,8 +29,8 @@ const PalmaresPage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
-                Notre Palmarès
+              <h1 className="font-display uppercase text-5xl md:text-6xl mb-4">
+                Notre <span className="text-primary">Palmarès</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Les trophées et titres qui marquent notre histoire

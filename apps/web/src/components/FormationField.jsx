@@ -168,13 +168,13 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
     <div className="formation-poster">
       {/* En-tête : badge + nom de l'équipe */}
       <div className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-b from-slate-950 to-slate-900 border-b border-white/10">
-        <img src="/logo.png" alt="FILIX" crossOrigin="anonymous" className="w-9 h-9 md:w-11 md:h-11 object-contain drop-shadow" />
+        <img src="/logo.webp" alt="KOTIYA FC" crossOrigin="anonymous" className="w-9 h-9 md:w-11 md:h-11 object-contain drop-shadow" />
         <h2 className="text-xl md:text-3xl font-black tracking-tight text-white uppercase">
-          {teamName?.trim() || 'FILIX'}
+          {teamName?.trim() || 'KOTIYA FC'}
         </h2>
       </div>
 
-      {/* Demi-terrain vertical en perspective : but FILIX en haut, ligne médiane en bas */}
+      {/* Demi-terrain vertical en perspective : but KOTIYA en haut, ligne médiane en bas */}
       <div className="football-pitch">
         <svg
           className="absolute inset-0 w-full h-full z-0 pointer-events-none"
@@ -221,7 +221,7 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
           <span className="text-lg md:text-2xl font-black text-white tracking-tight">{tactic}</span>
         </div>
         <img
-          src="/logo.png"
+          src="/logo.webp"
           alt=""
           crossOrigin="anonymous"
           className="absolute bottom-3 right-3 z-20 w-8 h-8 md:w-10 md:h-10 object-contain opacity-80 drop-shadow"

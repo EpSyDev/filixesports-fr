@@ -19,13 +19,13 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const StatCard = ({ title, value, subtitle, icon: Icon, iconColor, valueColor }) => (
-  <Card className="bg-card shadow-sm border-border/50 hover:shadow-md transition-all">
+  <Card className="bg-card shadow-sm border-primary/15 hover:border-primary/40 hover:shadow-md transition-all">
     <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
       <Icon className={`h-5 w-5 ${iconColor}`} />
     </CardHeader>
     <CardContent className="px-5 pb-4">
-      <div className={`text-4xl font-bold tracking-tight ${valueColor ?? ''}`}>{value}</div>
+      <div className={`font-stat text-4xl md:text-5xl font-extrabold ${valueColor ?? 'text-foreground'}`}>{value}</div>
       <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
     </CardContent>
   </Card>
@@ -65,8 +65,8 @@ const StatsEquipePage = () => {
   return (
     <>
       <Helmet>
-        <title>Statistiques Équipe - Filix</title>
-        <meta name="description" content="Consultez les statistiques globales et détaillées de l'équipe Filix" />
+        <title>Statistiques Équipe - KOTIYA FC</title>
+        <meta name="description" content="Consultez les statistiques globales et détaillées de l'équipe KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -80,11 +80,12 @@ const StatsEquipePage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-16"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 text-balance" style={{ letterSpacing: '-0.02em' }}>
-                Statistiques de l'Équipe
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">Performances</span>
+              <h1 className="font-display uppercase text-5xl md:text-6xl lg:text-7xl mb-4 text-balance">
+                Statistiques <span className="text-primary">d'Équipe</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Analyse détaillée des performances et des tendances de l'équipe Filix.
+                Analyse détaillée des performances et des tendances de l'équipe KOTIYA FC.
               </p>
             </motion.div>
 
@@ -101,16 +102,16 @@ const StatsEquipePage = () => {
             ) : teamStats ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <StatCard title="Matchs Joués" value={teamStats.matchesPlayed} subtitle="Total des rencontres disputées" icon={Activity} iconColor="text-blue-500" />
+                  <StatCard title="Matchs Joués" value={teamStats.matchesPlayed} subtitle="Total des rencontres disputées" icon={Activity} iconColor="text-primary" />
                   <StatCard title="Nombres de victoires" value={teamStats.wins} subtitle="Rencontres gagnées" icon={CheckCircle} iconColor="text-emerald-500" valueColor="text-emerald-500" />
-                  <StatCard title="Nombres de match nul" value={teamStats.draws} subtitle="Scores de parité" icon={MinusCircle} iconColor="text-blue-400" valueColor="text-blue-400" />
+                  <StatCard title="Nombres de match nul" value={teamStats.draws} subtitle="Scores de parité" icon={MinusCircle} iconColor="text-muted-foreground" valueColor="text-muted-foreground" />
                   <StatCard title="Nombres de défaite" value={teamStats.losses} subtitle="Rencontres perdues" icon={XCircle} iconColor="text-destructive" valueColor="text-destructive" />
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-                  <StatCard title="Total des Buts" value={teamStats.goalsScored} subtitle="Réalisations de l'équipe" icon={Trophy} iconColor="text-red-500" valueColor="text-red-500" />
+                  <StatCard title="Total des Buts" value={teamStats.goalsScored} subtitle="Réalisations de l'équipe" icon={Trophy} iconColor="text-primary" valueColor="text-primary" />
                   <StatCard title="Buts encaissés" value={teamStats.goalsConceded} subtitle="Buts concédés" icon={Shield} iconColor="text-orange-500" valueColor="text-orange-500" />
-                  <StatCard title="Nombre de trophée remporté" value={teamStats.trophiesCount} subtitle="Titres ajoutés au palmarès" icon={Trophy} iconColor="text-yellow-500" valueColor="text-yellow-500" />
+                  <StatCard title="Nombre de trophée remporté" value={teamStats.trophiesCount} subtitle="Titres ajoutés au palmarès" icon={Trophy} iconColor="text-primary" valueColor="text-primary" />
                   <StatCard title="Note Moyenne" value={teamStats.averageRating} subtitle="Sur l'ensemble de l'effectif" icon={Star} iconColor="text-yellow-400" />
                 </div>
 

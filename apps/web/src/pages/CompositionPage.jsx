@@ -14,8 +14,8 @@ const CompositionPage = () => {
   return (
     <>
       <Helmet>
-        <title>Composition tactique - FC25 Esport</title>
-        <meta name="description" content="Visualisez la composition tactique de l'équipe FC25 Esport sur le terrain." />
+        <title>Composition tactique - KOTIYA FC</title>
+        <meta name="description" content="Visualisez la composition tactique de l'équipe KOTIYA FC sur le terrain." />
       </Helmet>
 
       <div className="min-h-screen bg-transparent flex flex-col">

@@ -31,8 +31,8 @@ const EffectifPage = () => {
 
   return <>
       <Helmet>
-        <title>Effectif - Filix Esports</title>
-        <meta name="description" content="Découvrez l'effectif complet du FC25 Esport avec les statistiques de chaque joueur" />
+        <title>Effectif - KOTIYA FC</title>
+        <meta name="description" content="Découvrez l'effectif complet du KOTIYA FC avec les statistiques de chaque joueur" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -49,13 +49,12 @@ const EffectifPage = () => {
           }} transition={{
             duration: 0.5
           }} className="text-center mb-8 md:mb-16">
-              <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-foreground" style={{
-              letterSpacing: '-0.02em'
-            }}>
-                Notre Effectif
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">L'effectif</span>
+              <h1 className="font-display uppercase text-5xl md:text-7xl mb-6 text-foreground text-balance">
+                Notre <span className="text-primary">Effectif</span>
               </h1>
               <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-                Découvrez les joueurs professionnels qui composent notre équipe FC26.
+                Les joueurs qui composent l'équipe KOTIYA FC.
               </p>
             </motion.div>
 
@@ -75,11 +74,11 @@ const EffectifPage = () => {
               return (
                 <div key={label} className="mb-8 md:mb-16">
                   <div className="flex items-center gap-4 mb-4 md:mb-8">
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">{label}</h2>
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1">
+                    <h2 className="font-display uppercase text-3xl md:text-4xl text-foreground">{label}</h2>
+                    <span className="font-stat bg-primary text-primary-foreground font-extrabold text-sm px-2.5 py-1 rounded">
                       {groupPlayers.length}
-                    </Badge>
-                    <div className="flex-1 h-px bg-border"></div>
+                    </span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-primary/40 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                     {groupPlayers.map((player, index) => (

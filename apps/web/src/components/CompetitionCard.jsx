@@ -20,10 +20,10 @@ const CompetitionCard = ({ competition }) => {
   };
 
   return (
-    <Card className="bg-card border-border hover:shadow-lg transition-all duration-200">
+    <Card className="bg-card border-primary/15 hover:border-primary/40 hover:shadow-lg transition-all duration-200">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <CardTitle className="text-xl">{competition.name}</CardTitle>
+          <CardTitle className="font-display uppercase text-2xl">{competition.name}</CardTitle>
           {getStatusBadge()}
         </div>
         {competition.season && (

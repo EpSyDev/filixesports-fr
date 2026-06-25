@@ -56,9 +56,9 @@ const StandingsTable = ({ standings: standingsProp = [], loading: loadingProp = 
   });
 
   return (
-    <Card className="bg-card shadow-sm border-border animate-in fade-in duration-300">
-      <CardHeader className="bg-muted/30 border-b pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
+    <Card className="bg-card shadow-sm border-primary/15 animate-in fade-in duration-300">
+      <CardHeader className="bg-muted/30 border-b border-primary/15 pb-4">
+        <CardTitle className="font-display uppercase text-2xl tracking-wide flex items-center gap-2">
           <Trophy className="w-5 h-5 text-primary" /> Classement de la Ligue
         </CardTitle>
       </CardHeader>
@@ -91,30 +91,35 @@ const StandingsTable = ({ standings: standingsProp = [], loading: loadingProp = 
                   const diff = (s.goalsFor || 0) - (s.goalsAgainst || 0);
                   const rank = index + 1;
                   return (
-                    <TableRow 
-                      key={s.id} 
+                    <TableRow
+                      key={s.id}
                       className={cn(
                         "transition-colors hover:bg-muted/50",
-                        rank <= 3 && "bg-primary/5 border-l-4 border-l-primary"
+                        rank <= 3 && "bg-primary/5"
                       )}
                     >
-                      <TableCell className="text-center font-bold text-muted-foreground">{rank}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={cn(
+                          "font-stat font-extrabold text-base",
+                          rank <= 3 ? "text-primary" : "text-muted-foreground"
+                        )}>{rank}</span>
+                      </TableCell>
                       <TableCell className="font-semibold text-foreground">
                         <ClubBadge teamName={s.teamName} />
                       </TableCell>
-                      <TableCell className="text-center text-muted-foreground">{s.played || 0}</TableCell>
-                      <TableCell className="text-center">{s.won || 0}</TableCell>
-                      <TableCell className="text-center">{s.drawn || 0}</TableCell>
-                      <TableCell className="text-center">{s.lost || 0}</TableCell>
-                      <TableCell className="text-center text-muted-foreground hidden sm:table-cell">{s.goalsFor || 0}</TableCell>
-                      <TableCell className="text-center text-muted-foreground hidden sm:table-cell">{s.goalsAgainst || 0}</TableCell>
+                      <TableCell className="text-center font-stat text-muted-foreground">{s.played || 0}</TableCell>
+                      <TableCell className="text-center font-stat">{s.won || 0}</TableCell>
+                      <TableCell className="text-center font-stat">{s.drawn || 0}</TableCell>
+                      <TableCell className="text-center font-stat">{s.lost || 0}</TableCell>
+                      <TableCell className="text-center font-stat text-muted-foreground hidden sm:table-cell">{s.goalsFor || 0}</TableCell>
+                      <TableCell className="text-center font-stat text-muted-foreground hidden sm:table-cell">{s.goalsAgainst || 0}</TableCell>
                       <TableCell className={cn(
-                        "text-center font-semibold",
+                        "text-center font-stat font-semibold",
                         diff > 0 ? "text-emerald-500" : diff < 0 ? "text-destructive" : "text-muted-foreground"
                       )}>
                         {diff > 0 ? `+${diff}` : diff}
                       </TableCell>
-                      <TableCell className="text-center font-black text-primary text-lg">{s.points || 0}</TableCell>
+                      <TableCell className="text-center font-stat font-extrabold text-primary text-xl">{s.points || 0}</TableCell>
                     </TableRow>
                   );
                 })

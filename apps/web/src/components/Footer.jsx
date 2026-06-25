@@ -17,20 +17,20 @@ const DiscordIcon = (props) => (
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-950 text-slate-200 border-t-4 border-accent">
+    <footer className="hex-panel text-slate-200 border-t-2 border-primary/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
           <div className="space-y-4 lg:col-span-2">
             <Link to="/" className="inline-block hover:opacity-90 transition-opacity min-h-[44px] flex items-center">
               <img
-                src="/logo.png"
-                alt="FC25 Esport Logo"
+                src="/logo.webp"
+                alt="KOTIYA FC"
                 loading="lazy"
                 className="h-12 md:h-16 w-auto object-contain"
               />
             </Link>
-            <p className="text-2xl md:text-3xl font-extrabold uppercase tracking-[0.2em] text-white">
-              Unité. Passion. Performance.
+            <p className="font-display text-3xl md:text-4xl uppercase tracking-[0.12em] text-white">
+              <span className="text-primary">I</span>nstinct · <span className="text-primary">D</span>iscipline · <span className="text-primary">P</span>récision
             </p>
           </div>
 
@@ -55,10 +55,10 @@ const Footer = () => {
               <a href="#" aria-label="TikTok" title="Lien à venir" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
                 <TikTokIcon className="w-5 h-5" />
               </a>
-              <a href="https://youtube.com/@filix-esport?si=asUF5a7_E1OfbbK9" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
+              <a href="#" aria-label="YouTube" title="Lien à venir" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
                 <Youtube className="w-5 h-5" />
               </a>
-              <a href="https://discord.gg/56Zcszdz3d" target="_blank" rel="noopener noreferrer" aria-label="Discord" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
+              <a href="#" aria-label="Discord" title="Lien à venir" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300">
                 <DiscordIcon className="w-5 h-5" />
               </a>
             </div>
@@ -67,7 +67,7 @@ const Footer = () => {
 
         <div className="border-t border-slate-800 mt-8 md:mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-sm text-slate-500">
-            © 2026 FC25 Esport. Tous droits réservés.
+            © 2026 KOTIYA FC. Tous droits réservés.
           </p>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
             <Link to="#" className="text-slate-500 hover:text-slate-300 transition-colors min-h-[44px] flex items-center">

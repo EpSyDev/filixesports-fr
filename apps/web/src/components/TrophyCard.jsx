@@ -19,12 +19,12 @@ const TrophyCard = ({ trophy }) => {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Trophy className="w-24 h-24 text-gold" />
+              <Trophy className="w-24 h-24 text-primary" />
             </div>
           )}
         </div>
         <div className="p-6">
-          <div className="text-3xl font-bold text-gold mb-2">{trophy.year}</div>
+          <div className="text-3xl font-bold text-primary mb-2">{trophy.year}</div>
           <h3 className="font-bold text-lg mb-2">{trophy.name}</h3>
           {trophy.competition && (
             <p className="text-sm text-muted-foreground mb-2">{trophy.competition}</p>

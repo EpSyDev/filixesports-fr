@@ -6,11 +6,11 @@ brand
 
 ## Users
 
-Supporters et membres du club Filix Esports (FC25 console francophone). Contexte : consulté sur mobile après un match, ou sur desktop pour suivre les compétitions en temps réel. L'admin accède à la section protégée pour gérer les joueurs, résultats et compositions tactiques.
+Supporters et membres du club KOTIYA FC (FC25 console francophone). Contexte : consulté sur mobile après un match, ou sur desktop pour suivre les compétitions en temps réel. L'admin accède à la section protégée pour gérer les joueurs, résultats et compositions tactiques.
 
 ## Product Purpose
 
-Site vitrine officiel de Filix Esports : effectif, compétitions (ligue + tournoi), palmarès, statistiques joueurs et équipe, médias, et tableau tactique interactif. Le site sert à la fois de hub d'information pour les fans et d'outil de gestion pour l'admin du club.
+Site vitrine officiel de KOTIYA FC : effectif, compétitions (ligue + tournoi), palmarès, statistiques joueurs et équipe, médias, et tableau tactique interactif. Le site sert à la fois de hub d'information pour les fans et d'outil de gestion pour l'admin du club.
 
 ## Brand Personality
 

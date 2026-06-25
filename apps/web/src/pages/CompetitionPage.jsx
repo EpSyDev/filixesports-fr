@@ -27,7 +27,7 @@ const CompetitionPage = () => {
   return (
     <>
       <Helmet>
-        <title>Compétitions - FC25 Esport</title>
+        <title>Compétitions - KOTIYA FC</title>
         <meta name="description" content="Découvrez toutes nos compétitions, ligues et tournois FC25." />
       </Helmet>
 
@@ -39,7 +39,8 @@ const CompetitionPage = () => {
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 md:mb-12">
               <div>
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-foreground">
+                <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">Saison 2026</span>
+                <h1 className="font-display uppercase text-5xl md:text-6xl mb-4 text-foreground">
                   Compétitions
                 </h1>
                 <p className="text-lg text-muted-foreground max-w-2xl font-medium">
@@ -110,7 +111,7 @@ const CompetitionPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
                   >
-                    <Card className="h-full flex flex-col overflow-hidden border-border shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                    <Card className="h-full flex flex-col overflow-hidden border-primary/15 hover:border-primary/40 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
                       <CardHeader className="pb-4 relative bg-muted/30">
                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none text-primary">
                           <Trophy className="w-24 h-24" />
@@ -128,7 +129,7 @@ const CompetitionPage = () => {
                             {comp.status === 'active' ? 'En cours' : comp.status === 'completed' ? 'Terminé' : 'À venir'}
                           </Badge>
                         </div>
-                        <CardTitle className="text-2xl font-extrabold leading-tight relative z-10 group-hover:text-primary transition-colors">
+                        <CardTitle className="font-display uppercase text-2xl md:text-3xl leading-tight relative z-10 group-hover:text-primary transition-colors">
                           {comp.name}
                         </CardTitle>
                       </CardHeader>

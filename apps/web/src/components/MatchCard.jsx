@@ -25,25 +25,25 @@ const MatchCard = ({ match }) => {
   };
 
   return (
-    <Card className="bg-card border-border hover:shadow-lg transition-all duration-200">
+    <Card className="bg-card border-primary/15 hover:border-primary/40 hover:shadow-lg transition-all duration-200">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span>{format(matchDate, 'dd/MM/yyyy')}</span>
+            <span className="font-stat">{format(matchDate, 'dd/MM/yyyy')}</span>
           </div>
           {getResultBadge()}
         </div>
-        
+
         <div className="flex items-center justify-between mb-4">
           <div className="flex-1 text-center">
-            <div className="text-sm font-medium text-muted-foreground mb-1">FILIX</div>
-            <div className="text-4xl font-bold text-primary">{homeScore}</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">KOTIYA FC</div>
+            <div className="font-stat text-5xl font-extrabold text-foreground">{homeScore}</div>
           </div>
-          <div className="px-4 text-2xl font-bold text-muted-foreground">-</div>
+          <div className="px-4 font-stat text-2xl font-bold text-muted-foreground">:</div>
           <div className="flex-1 text-center">
-            <div className="text-sm font-medium text-muted-foreground mb-1">{match.opponent}</div>
-            <div className="text-4xl font-bold text-accent">{awayScore}</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 truncate">{match.opponent}</div>
+            <div className="font-stat text-5xl font-extrabold text-foreground/70">{awayScore}</div>
           </div>
         </div>
 

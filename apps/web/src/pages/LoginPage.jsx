@@ -36,15 +36,16 @@ const LoginPage = () => {
   return (
     <>
       <Helmet>
-        <title>Admin Login - Filix</title>
-        <meta name="description" content="Connexion administrateur pour le tableau de bord Filix" />
+        <title>Admin Login - KOTIYA FC</title>
+        <meta name="description" content="Connexion administrateur pour le tableau de bord KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md bg-card border-border">
+        <Card className="w-full max-w-md bg-card border-primary/20 ring-gold">
           <CardHeader className="text-center">
-            <div className="text-4xl font-bold text-gold mb-4" style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.1em' }}>
-              FILIX
+            <img src="/logo.webp" alt="KOTIYA FC" className="h-20 w-auto object-contain mx-auto mb-3 drop-shadow-[0_0_28px_rgba(186,139,74,0.45)]" />
+            <div className="font-display text-3xl text-primary mb-4 uppercase tracking-wide">
+              KOTIYA FC
             </div>
             <CardTitle>Connexion Administrateur</CardTitle>
             <CardDescription>Accédez au tableau de bord</CardDescription>
@@ -58,7 +59,7 @@ const LoginPage = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="admin@filix.com"
+                  placeholder="admin@kotiya.fr"
                   className="bg-background text-foreground"
                   required
                 />

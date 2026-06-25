@@ -199,14 +199,14 @@ const FormationComposer = ({ isReadOnly }) => {
           )}
         </div>
 
-        {/* Sélecteur de l'équipe FILIX (domicile) */}
+        {/* Sélecteur de l'équipe KOTIYA FC (domicile) */}
         <div className="flex items-center bg-primary/10 border border-primary/30 rounded-lg px-3 py-2 gap-2">
-          <img src="/logo.png" alt="FILIX" className="w-6 h-6 object-contain shrink-0" />
+          <img src="/logo.webp" alt="KOTIYA FC" className="w-6 h-6 object-contain shrink-0" />
           <input
             type="text"
             value={teamName}
             onChange={e => setTeamName(e.target.value)}
-            placeholder="FILIX"
+            placeholder="KOTIYA FC"
             className="flex-1 bg-transparent text-sm font-bold text-primary placeholder:text-primary/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-sm min-w-0"
           />
           <Select value={teamTactic} onValueChange={handleTeamTacticChange}>

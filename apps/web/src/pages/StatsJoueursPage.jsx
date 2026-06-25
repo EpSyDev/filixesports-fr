@@ -65,8 +65,8 @@ const StatsJoueursPage = () => {
   return (
     <>
       <Helmet>
-        <title>Statistiques Joueurs - Filix</title>
-        <meta name="description" content="Consultez les statistiques détaillées de tous les joueurs du Filix Football Club" />
+        <title>Statistiques Joueurs - KOTIYA FC</title>
+        <meta name="description" content="Consultez les statistiques détaillées de tous les joueurs du KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -80,8 +80,9 @@ const StatsJoueursPage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-6 md:mb-12"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
-                Statistiques des Joueurs
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">Le détail</span>
+              <h1 className="font-display uppercase text-5xl md:text-6xl mb-4">
+                Stats <span className="text-primary">Joueurs</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Cliquez sur une colonne pour trier
@@ -93,15 +94,15 @@ const StatsJoueursPage = () => {
                 {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden overflow-x-auto">
+              <div className="bg-card border border-primary/25 rounded-2xl overflow-hidden overflow-x-auto shadow-2xl shadow-black/50">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-[#100f0d] hover:bg-[#100f0d] border-b border-primary/25">
                       {COLUMNS.map(col => (
                         <TableHead
                           key={col.key}
                           onClick={() => handleSort(col.key)}
-                          className={`cursor-pointer select-none whitespace-nowrap hover:text-foreground transition-colors ${col.align === 'center' ? 'text-center' : ''} ${col.hide}`}
+                          className={`cursor-pointer select-none whitespace-nowrap text-xs font-bold uppercase tracking-wider text-primary/80 hover:text-primary transition-colors ${col.align === 'center' ? 'text-center' : ''} ${col.hide}`}
                         >
                           {col.label}
                           <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
@@ -111,24 +112,24 @@ const StatsJoueursPage = () => {
                   </TableHeader>
                   <TableBody>
                     {playersWithStats.map(player => (
-                      <TableRow key={player.id} className="hover:bg-muted/40 transition-colors">
-                        <TableCell className="font-bold">{player.number}</TableCell>
-                        <TableCell className="font-medium whitespace-nowrap">{player.name}</TableCell>
+                      <TableRow key={player.id} className="border-b border-border/40 even:bg-foreground/[0.025] hover:bg-primary/5 transition-colors">
+                        <TableCell className="font-stat font-bold text-muted-foreground">{player.number}</TableCell>
+                        <TableCell className="font-display uppercase text-base whitespace-nowrap">{player.name}</TableCell>
                         <TableCell className="text-muted-foreground hidden sm:table-cell">{player.position}</TableCell>
-                        <TableCell className="text-center hidden md:table-cell">{player.totalMatches}</TableCell>
-                        <TableCell className="text-center font-bold text-primary">{player.totalGoals}</TableCell>
-                        <TableCell className="text-center font-bold text-accent hidden sm:table-cell">{player.totalAssists}</TableCell>
-                        <TableCell className="text-center hidden lg:table-cell">{player.totalShots}</TableCell>
-                        <TableCell className="text-center hidden lg:table-cell">{player.totalPasses}</TableCell>
-                        <TableCell className="text-center hidden lg:table-cell">{player.totalTackles}</TableCell>
-                        <TableCell className="text-center font-bold text-yellow-500">
+                        <TableCell className="text-center font-stat hidden md:table-cell">{player.totalMatches}</TableCell>
+                        <TableCell className="text-center font-stat font-bold text-primary">{player.totalGoals}</TableCell>
+                        <TableCell className="text-center font-stat font-bold hidden sm:table-cell">{player.totalAssists}</TableCell>
+                        <TableCell className="text-center font-stat hidden lg:table-cell">{player.totalShots}</TableCell>
+                        <TableCell className="text-center font-stat hidden lg:table-cell">{player.totalPasses}</TableCell>
+                        <TableCell className="text-center font-stat hidden lg:table-cell">{player.totalTackles}</TableCell>
+                        <TableCell className="text-center font-stat font-bold text-primary">
                           {player.averageRating > 0 ? player.averageRating.toFixed(1) : '-'}
                         </TableCell>
                         <TableCell className="text-center hidden sm:table-cell">
-                          {player.motm > 0 ? <span className="font-bold text-amber-500">🏆 {player.motm}</span> : '-'}
+                          {player.motm > 0 ? <span className="font-stat font-bold text-primary">{player.motm}</span> : <span className="text-muted-foreground">-</span>}
                         </TableCell>
-                        <TableCell className="text-center hidden md:table-cell">{player.yellowCards}</TableCell>
-                        <TableCell className="text-center hidden md:table-cell">{player.redCards}</TableCell>
+                        <TableCell className="text-center font-stat hidden md:table-cell">{player.yellowCards}</TableCell>
+                        <TableCell className="text-center font-stat hidden md:table-cell">{player.redCards}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

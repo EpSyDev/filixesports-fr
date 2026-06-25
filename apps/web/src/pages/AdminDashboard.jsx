@@ -175,25 +175,26 @@ const AdminDashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Admin Dashboard - FC25 Esport</title>
+        <title>Admin Dashboard - KOTIYA FC</title>
       </Helmet>
       <div className="min-h-[100dvh] bg-background flex flex-col">
         <Header />
         <main className="flex-1 py-8 md:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6 md:mb-8">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Tableau de bord</h1>
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-2">Administration</span>
+              <h1 className="font-display uppercase text-4xl md:text-5xl text-foreground">Tableau de <span className="text-primary">bord</span></h1>
               <p className="text-muted-foreground mt-2 text-base md:text-lg">Gérez les compétitions, les matchs et les effectifs.</p>
             </div>
             
             <Tabs defaultValue="competitions" className="w-full">
               <div className="overflow-x-auto pb-2 mb-4 md:mb-8 custom-scrollbar">
-                <TabsList className="inline-flex w-max min-w-full h-auto p-1 bg-muted/50">
-                  <TabsTrigger value="competitions" className="py-2.5 px-4 min-h-[44px]">Compétitions</TabsTrigger>
-                  <TabsTrigger value="matches" className="py-2.5 px-4 min-h-[44px]">Matchs Simples</TabsTrigger>
-                  <TabsTrigger value="players" className="py-2.5 px-4 min-h-[44px]">Joueurs</TabsTrigger>
-                  <TabsTrigger value="trophies" className="py-2.5 px-4 min-h-[44px]">Trophées</TabsTrigger>
-                  <TabsTrigger value="media" className="py-2.5 px-4 min-h-[44px]">Média</TabsTrigger>
+                <TabsList className="inline-flex w-max min-w-full h-auto p-1 bg-muted/40 border border-primary/15 rounded-xl">
+                  <TabsTrigger value="competitions" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Compétitions</TabsTrigger>
+                  <TabsTrigger value="matches" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Matchs Simples</TabsTrigger>
+                  <TabsTrigger value="players" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Joueurs</TabsTrigger>
+                  <TabsTrigger value="trophies" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Trophées</TabsTrigger>
+                  <TabsTrigger value="media" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Média</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -204,7 +205,7 @@ const AdminDashboard = () => {
               <TabsContent value="matches" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   <div className="lg:col-span-5">
-                    <Card className="bg-card border-border shadow-sm">
+                    <Card className="bg-card border-primary/15 shadow-lg shadow-black/30">
                       <CardHeader>
                         <CardTitle>{matchForm.id ? 'Modifier match' : 'Nouveau match'}</CardTitle>
                       </CardHeader>
@@ -231,14 +232,14 @@ const AdminDashboard = () => {
                     </Card>
                   </div>
                   <div className="lg:col-span-7">
-                    <Card className="bg-card shadow-sm border-border">
+                    <Card className="bg-card shadow-lg shadow-black/30 border-primary/15">
                       <CardHeader><CardTitle>Historique des matchs</CardTitle></CardHeader>
                       <CardContent className="space-y-2 max-h-[600px] overflow-auto custom-scrollbar">
                         {matches.length === 0 ? (
                           <p className="text-muted-foreground text-center py-8">Aucun match enregistré.</p>
                         ) : (
                           matches.map(m => (
-                            <div key={m.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-muted/60 cursor-pointer transition-colors" onClick={() => handleEditMatch(m)}>
+                            <div key={m.id} className="flex justify-between items-center p-3 bg-muted/20 border border-primary/10 rounded-lg hover:bg-primary/5 hover:border-primary/30 cursor-pointer transition-colors" onClick={() => handleEditMatch(m)}>
                               <div>
                                 <div className="font-semibold">{m.opponent}</div>
                                 <div className="text-sm text-muted-foreground">{m.date.split('T')[0]}</div>
@@ -262,7 +263,7 @@ const AdminDashboard = () => {
 
               <TabsContent value="players" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="shadow-sm border-border">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>{playerForm.id ? 'Modifier le joueur' : 'Nouveau joueur'}</CardTitle></CardHeader>
                     <CardContent>
                       <form onSubmit={handlePlayerSubmit} className="space-y-5">
@@ -380,7 +381,7 @@ const AdminDashboard = () => {
                       </form>
                     </CardContent>
                   </Card>
-                  <Card className="shadow-sm border-border">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>Effectif</CardTitle></CardHeader>
                     <CardContent className="max-h-[500px] overflow-auto space-y-2 custom-scrollbar">
                       {players.length === 0 ? (
@@ -414,7 +415,7 @@ const AdminDashboard = () => {
               
               <TabsContent value="trophies" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="shadow-sm border-border">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>Nouveau Trophée</CardTitle></CardHeader>
                     <CardContent>
                       <form onSubmit={handleTrophySubmit} className="space-y-4">
@@ -424,14 +425,14 @@ const AdminDashboard = () => {
                       </form>
                     </CardContent>
                   </Card>
-                  <Card className="shadow-sm border-border">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>Palmarès</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                       {trophies.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">Aucun trophée enregistré.</p>
                       ) : (
                         trophies.map(t=>(
-                          <div key={t.id} className="flex justify-between items-center p-3 bg-muted/30 border rounded-lg hover:bg-muted/60 transition-colors">
+                          <div key={t.id} className="flex justify-between items-center p-3 bg-muted/20 border border-primary/10 rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-colors">
                             <span className="font-medium">{t.year} - {t.name}</span>
                             <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-colors min-h-[44px] min-w-[44px]" onClick={()=>deleteTrophy(t.id)}>
                               <Trash2 className="w-5 h-5"/>
@@ -447,14 +448,14 @@ const AdminDashboard = () => {
               <TabsContent value="media" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <MediaUpload onUpload={createMedia} />
-                  <Card className="shadow-sm border-border">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
                     <CardHeader><CardTitle>Médias</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                       {media.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">Aucun média enregistré.</p>
                       ) : (
                         media.map(m=>(
-                          <div key={m.id} className="flex justify-between items-center p-3 bg-muted/30 border rounded-lg hover:bg-muted/60 transition-colors">
+                          <div key={m.id} className="flex justify-between items-center p-3 bg-muted/20 border border-primary/10 rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-colors">
                             <span className="font-medium truncate pr-4">{m.title}</span>
                             <Button variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-colors flex-shrink-0 min-h-[44px] min-w-[44px]" onClick={()=>deleteMedia(m.id)}>
                               <Trash2 className="w-5 h-5"/>

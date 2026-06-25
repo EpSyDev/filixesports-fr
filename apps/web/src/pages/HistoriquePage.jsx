@@ -14,8 +14,8 @@ const HistoriquePage = () => {
   return (
     <>
       <Helmet>
-        <title>Historique - Filix</title>
-        <meta name="description" content="Consultez l'historique complet des matchs du Filix Football Club" />
+        <title>Historique - KOTIYA FC</title>
+        <meta name="description" content="Consultez l'historique complet des matchs du KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -29,8 +29,9 @@ const HistoriquePage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-6 md:mb-12"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
-                Historique des Matchs
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">Résultats</span>
+              <h1 className="font-display uppercase text-5xl md:text-6xl mb-4">
+                Historique <span className="text-primary">des Matchs</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Tous nos matchs, résultats et performances

@@ -6,10 +6,16 @@ body {
   font-family: "Barlow", sans-serif;
   overflow-x: clip;
   -webkit-tap-highlight-color: transparent;
-  background-image: url('/background.png');
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center top;
+  color: hsl(var(--foreground));
+  background-color: #080807;
+  /* Image signature (ballon or + hexagones) + voile sombre pour la lisibilité des textes */
+  background-image:
+    linear-gradient(hsl(0 0% 3% / 0.45), hsl(0 0% 3% / 0.55)),
+    url('/background.png');
+  background-attachment: fixed, fixed;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  background-position: center, center;
 }
 
 /* iOS Safari ne supporte pas background-attachment: fixed */
@@ -19,8 +25,15 @@ body {
   }
 }
 
-h1, h2, h3 {
+h1, h2 {
+  font-family: "Anton", "Barlow Condensed", sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+}
+h3, h4 {
   font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
 }
 
 html {
@@ -29,35 +42,35 @@ html {
 
 @layer base {
   :root {
-    /* FC25 Light Mode */
+    /* KOTIYA FC — Light Mode (or sur clair) */
     --background: 0 0% 100%;
-    --foreground: 220 20% 10%;
-    
+    --foreground: 0 0% 10%;
+
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-    
+    --card-foreground: 0 0% 10%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
-    
-    --primary: 216 100% 40%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 0 100% 50%;
-    --secondary-foreground: 0 0% 100%;
-    
-    --muted: 216 15% 94%;
-    --muted-foreground: 216 10% 45%;
-    
-    --accent: 0 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 100% 50%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 35 46% 44%;
+    --primary-foreground: 0 0% 8%;
+
+    --secondary: 35 12% 92%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 35 10% 94%;
+    --muted-foreground: 35 6% 36%;
+
+    --accent: 35 48% 48%;
+    --accent-foreground: 0 0% 8%;
+
+    --destructive: 0 80% 48%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 216 20% 88%;
-    --input: 216 20% 88%;
-    --ring: 216 100% 40%;
-    
+
+    --border: 35 14% 86%;
+    --input: 35 14% 86%;
+    --ring: 35 46% 44%;
+
     --radius: 0.75rem;
 
     /* Mobile Spacing & Touch Targets */
@@ -73,36 +86,36 @@ html {
   }
 
   .dark {
-    /* FC25 Dark Mode */
-    --background: 220 30% 8%;
-    --foreground: 210 20% 98%;
-    
-    --card: 220 25% 12%;
-    --card-foreground: 210 20% 98%;
-    
-    --popover: 220 25% 12%;
-    --popover-foreground: 210 20% 98%;
-    
-    --primary: 216 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 0 100% 50%;
-    --secondary-foreground: 0 0% 100%;
-    
-    --muted: 220 20% 16%;
-    --muted-foreground: 215 15% 65%;
-    
-    --accent: 0 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 216 100% 50%;
+    /* KOTIYA FC — Dark Mode (or sur noir, version principale) */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 96%;
 
-    /* Pitch Tokens */
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 35 45% 51%;
+    --primary-foreground: 0 0% 8%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 92%;
+
+    --muted: 0 0% 14%;
+    --muted-foreground: 35 8% 64%;
+
+    --accent: 35 47% 54%;
+    --accent-foreground: 0 0% 8%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 35 14% 18%;
+    --input: 35 14% 18%;
+    --ring: 35 45% 51%;
+
+    /* Pitch Tokens (pelouse conservée réaliste) */
     --pitch-bg: 145 50% 18%;
     --pitch-lines: 0 0% 100%;
   }
@@ -141,13 +154,13 @@ html {
 }
 
 @layer components {
-  /* Poster vertical FILIX */
+  /* Poster vertical KOTIYA FC */
   .formation-poster {
     @apply relative w-full overflow-hidden rounded-xl border-2 md:border-4 border-white/20 shadow-xl bg-slate-900;
     margin: 0 auto;
   }
 
-  /* Demi-terrain vertical (but FILIX en haut, ligne médiane en bas) */
+  /* Demi-terrain vertical (but KOTIYA en haut, ligne médiane en bas) */
   .football-pitch {
     @apply relative w-full overflow-hidden;
     background-color: hsl(var(--pitch-bg));
@@ -214,6 +227,51 @@ html {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Typo signature */
+  .font-display {
+    font-family: "Anton", "Barlow Condensed", sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+  }
+  .font-stat {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Hexagone signature (pointe en haut) */
+  .hex-clip {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  /* Panneau texturé nid-d'abeille (pour sections sombres) */
+  .hex-panel {
+    background-color: hsl(0 0% 7%);
+    background-image:
+      radial-gradient(120% 100% at 50% 0%, hsl(35 47% 50% / 0.08), transparent 60%),
+      url("data:image/svg+xml,%3Csvg width='28' height='49' viewBox='0 0 28 49' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ba8b4a' stroke-opacity='0.08' stroke-width='1'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5z'/%3E%3Cpath d='M0 24.5l13-7.5M27 24.5l-13-7.5M13.99 41.5V32M.75 8.25l13 7.5M27.25 8.25l-13 7.5'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: cover, 28px 49px;
+  }
+
+  /* Liseré or fin réutilisable */
+  .ring-gold {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35), 0 0 24px -8px hsl(var(--primary) / 0.4);
+  }
+
+  /* Aura vivante du blason (respiration lente) */
+  .logo-aura {
+    background: radial-gradient(circle, rgba(186,139,74,0.55) 0%, rgba(186,139,74,0.18) 42%, transparent 70%);
+    transform: translate(-50%, -50%);
+    animation: logo-aura-pulse 4.5s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes logo-aura-pulse {
+    0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    50%      { opacity: 0.92; transform: translate(-50%, -50%) scale(1.1); }
   }
   
   .custom-scrollbar::-webkit-scrollbar {

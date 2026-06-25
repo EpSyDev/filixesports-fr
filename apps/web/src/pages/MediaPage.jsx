@@ -18,8 +18,8 @@ const MediaPage = () => {
   return (
     <>
       <Helmet>
-        <title>Média - Filix</title>
-        <meta name="description" content="Galerie photos et vidéos du Filix Football Club" />
+        <title>Média - KOTIYA FC</title>
+        <meta name="description" content="Galerie photos et vidéos du KOTIYA FC" />
       </Helmet>
 
       <div className="min-h-screen bg-transparent">
@@ -33,8 +33,9 @@ const MediaPage = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ letterSpacing: '-0.02em' }}>
-                Galerie Média
+              <span className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 block mb-3">Médias</span>
+              <h1 className="font-display uppercase text-5xl md:text-6xl mb-4">
+                Galerie <span className="text-primary">Média</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Photos et vidéos de nos matchs et événements

@@ -12,15 +12,15 @@ const ClubBadge = ({ teamName, className, showIcon = true }) => {
     <span className={cn("inline-flex items-center gap-1.5", className)}>
       {isOurs && showIcon && (
         <img
-          src="/logo.png"
-          alt="FILIX"
-          className="w-5 h-5 rounded-full object-contain shrink-0 ring-1 ring-blue-500/30"
+          src="/logo.webp"
+          alt="KOTIYA FC"
+          className="w-5 h-5 rounded-full object-contain shrink-0 ring-1 ring-primary/40"
         />
       )}
       <span
         className={cn(
           "truncate",
-          isOurs && "font-bold text-blue-700 dark:text-blue-400"
+          isOurs && "font-bold text-primary"
         )}
       >
         {displayName || 'TBD'}

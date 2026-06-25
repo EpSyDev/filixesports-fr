@@ -115,7 +115,7 @@ const CompetitionDetail = () => {
 
   return (
     <>
-      <Helmet><title>{`${competition.name} - Filix`}</title></Helmet>
+      <Helmet><title>{`${competition.name} - KOTIYA FC`}</title></Helmet>
       <div className="min-h-screen bg-transparent flex flex-col">
         <Header />
         <main className="flex-1 py-12 lg:py-20">
@@ -124,7 +124,7 @@ const CompetitionDetail = () => {
               <ArrowLeft className="w-4 h-4 mr-2" /> Retour aux compétitions
             </Link>
 
-            <div className="bg-card border border-border shadow-sm rounded-3xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div className="hex-panel border border-primary/20 shadow-sm rounded-3xl p-8 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
                 {competition.type === 'LIGUE' ? <Trophy className="w-48 h-48" /> : <Network className="w-48 h-48" />}
               </div>
@@ -140,7 +140,7 @@ const CompetitionDetail = () => {
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">{competition.name}</h1>
+                <h1 className="font-display uppercase text-4xl md:text-6xl text-foreground">{competition.name}</h1>
                 {competition.description && <p className="mt-4 text-muted-foreground max-w-2xl">{competition.description}</p>}
               </div>
             </div>
@@ -151,7 +151,7 @@ const CompetitionDetail = () => {
                   <StandingsTable standings={leagueStandings} loading={false} />
                 </div>
                 <div className="lg:col-span-4 space-y-6">
-                  <h3 className="text-2xl font-bold flex items-center gap-2 mb-6"><Calendar className="text-accent w-6 h-6" /> Calendrier</h3>
+                  <h3 className="font-display uppercase text-2xl flex items-center gap-2 mb-6"><Calendar className="text-primary w-6 h-6" /> Calendrier</h3>
                   <div className="space-y-6 max-h-[800px] overflow-y-auto pr-4 custom-scrollbar">
                     {leagueMatches.length === 0 ? (
                       <div className="text-center p-8 border border-dashed rounded-xl bg-muted/20 text-muted-foreground">Aucun match programmé.</div>

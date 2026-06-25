@@ -40,10 +40,10 @@ const TournamentSummary = ({ competition }) => {
   }, [competition.id]);
   
   return (
-    <Card className="flex flex-col h-full hover:-translate-y-1 transition-transform duration-300 border-border shadow-sm group">
-      <CardHeader className="pb-3 border-b bg-primary/5">
+    <Card className="flex flex-col h-full hover:-translate-y-1 transition-all duration-300 border-primary/15 hover:border-primary/40 shadow-sm group">
+      <CardHeader className="pb-3 border-b border-primary/10 bg-primary/5">
         <div className="flex justify-between items-start mb-2">
-          <CardTitle className="text-lg md:text-xl font-bold truncate pr-2 text-foreground group-hover:text-primary transition-colors">{competition.name}</CardTitle>
+          <CardTitle className="font-display uppercase text-xl md:text-2xl truncate pr-2 text-foreground group-hover:text-primary transition-colors">{competition.name}</CardTitle>
           <Badge variant={competition.status === 'active' ? 'accent' : competition.status === 'completed' ? 'secondary' : 'outline'} className={
             competition.status === 'active' ? 'bg-accent text-accent-foreground' : ''
           }>
@@ -87,8 +87,8 @@ const HomePage = () => {
   return (
     <>
       <Helmet>
-        <title>FC25 Esport - Unité. Passion. Performance</title>
-        <meta name="description" content="Bienvenue sur le site officiel du FC25 Esport. Découvrez notre équipe, nos compétitions et notre palmarès." />
+        <title>KOTIYA FC - Instinct · Discipline · Précision</title>
+        <meta name="description" content="Bienvenue sur le site officiel du KOTIYA FC. Découvrez notre équipe, nos compétitions et notre palmarès." />
       </Helmet>
 
       <div className="min-h-screen bg-transparent flex flex-col">
@@ -96,44 +96,73 @@ const HomePage = () => {
 
         <main className="flex-1">
           <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
-            
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-col items-center"
-              >
-                <img 
-                  src="/logo.png" 
-                  alt="FC25 Esport" 
-                  className="h-32 md:h-56 lg:h-64 object-contain mb-6 md:mb-8 drop-shadow-2xl"
-                />
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-foreground drop-shadow-md" style={{ letterSpacing: '-0.02em' }}>
-                  Unité. Passion. Performance
-                </h1>
-                <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed px-2">
-                  Rejoignez-nous dans notre quête d'excellence sur et en dehors du terrain virtuel. Le football, plus qu'un jeu, une véritable compétition.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0">
-                  <Link to="/effectif" className="w-full sm:w-auto">
-                    <Button size="lg" className="w-full sm:w-auto gap-2 text-base px-8 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg border-2 border-accent hover:border-transparent transition-all">
-                      Découvrir l'équipe
-                      <Gamepad2 className="w-5 h-5" />
-                    </Button>
-                  </Link>
-                  <Link to="/historique" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 text-base px-8 h-14 border-primary text-primary hover:bg-primary hover:text-primary-foreground shadow-lg transition-all">
-                      Voir les résultats
-                      <ArrowRight className="w-5 h-5" />
-                    </Button>
-                  </Link>
-                </div>
-              </motion.div>
+            {/* Atmosphère : halo or + auréole derrière le blason */}
+            <div className="absolute inset-0 -z-0 pointer-events-none" aria-hidden="true">
+              {/* Halo large diffus */}
+              <div className="absolute left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-4xl aspect-square rounded-full bg-primary/20 blur-[150px]" />
+              {/* Aura vivante (respiration lente) */}
+              <div className="logo-aura absolute left-1/2 top-[34%] w-[64vw] max-w-2xl aspect-square rounded-full blur-2xl" />
+              {/* Cœur lumineux resserré derrière le blason */}
+              <div className="absolute left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 w-[42vw] max-w-md aspect-square rounded-full bg-primary/35 blur-[70px]" />
             </div>
+
+            <motion.div
+              initial="hidden"
+              animate="show"
+              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
+              className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-12 flex flex-col items-center"
+            >
+              <motion.img
+                variants={{ hidden: { opacity: 0, scale: 0.9, y: 12 }, show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } } }}
+                src="/logo.webp"
+                alt="KOTIYA FC"
+                className="relative h-56 md:h-[22rem] lg:h-[26rem] object-contain mb-5 md:mb-7 drop-shadow-[0_0_60px_rgba(186,139,74,0.65)]"
+              />
+              <motion.span
+                variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="text-xs md:text-sm font-bold uppercase tracking-[0.35em] text-primary/90 mb-5 md:mb-7"
+              >
+                Club Esport · FC25 · Depuis 2026
+              </motion.span>
+              <motion.h1
+                variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }}
+                className="font-display text-foreground text-[clamp(3rem,12vw,7rem)] uppercase text-balance"
+              >
+                Kotiya <span className="text-primary">FC</span>
+              </motion.h1>
+              <motion.p
+                variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="text-base sm:text-lg md:text-2xl font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-foreground/80 mt-6 md:mt-8 mb-8 md:mb-10 text-balance"
+              >
+                <span className="text-primary">I</span>nstinct · <span className="text-primary">D</span>iscipline · <span className="text-primary">P</span>récision
+              </motion.p>
+              <motion.p
+                variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto mb-10 md:mb-12 leading-relaxed px-2"
+              >
+                Notre quête d'excellence sur le terrain virtuel. Le football, plus qu'un jeu : une compétition.
+              </motion.p>
+              <motion.div
+                variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0"
+              >
+                <Link to="/effectif" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto gap-2 text-base font-bold uppercase tracking-wide px-8 h-14 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.6)] transition-all">
+                    Découvrir l'équipe
+                    <Gamepad2 className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/historique" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 text-base font-bold uppercase tracking-wide px-8 h-14 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground bg-transparent transition-all">
+                    Voir les résultats
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
           </section>
 
-          <section className="py-16 md:py-24 bg-muted/20">
+          <section className="py-16 md:py-24 bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-4">
                 <motion.div
@@ -142,8 +171,8 @@ const HomePage = () => {
                   transition={{ duration: 0.5 }}
                   viewport={{ once: true }}
                 >
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-3 text-foreground" style={{ letterSpacing: '-0.02em' }}>
-                    Compétitions & Tournois
+                  <h2 className="font-display uppercase text-4xl md:text-5xl lg:text-6xl mb-2 md:mb-3 text-foreground">
+                    Compétitions <span className="text-primary">& Tournois</span>
                   </h2>
                   <p className="text-base md:text-lg text-muted-foreground font-medium">
                     Suivez l'évolution de nos tournois en temps réel
@@ -198,7 +227,7 @@ const HomePage = () => {
             </div>
           </section>
 
-          <section className="py-16 md:py-24 bg-card border-t border-border">
+          <section className="hex-panel py-16 md:py-24 border-t border-primary/15">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                 <motion.div
@@ -208,10 +237,10 @@ const HomePage = () => {
                   viewport={{ once: true }}
                   className="text-center group"
                 >
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 ring-2 ring-primary/20 group-hover:bg-primary group-hover:ring-primary/40 transition-all duration-300">
+                  <div className="hex-clip w-16 h-16 md:w-20 md:h-20 bg-primary/25 ring-1 ring-primary/40 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:bg-primary transition-all duration-300">
                     <Trophy className="w-8 h-8 md:w-10 md:h-10 text-primary group-hover:text-primary-foreground transition-colors" />
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-foreground">Excellence</h3>
+                  <h3 className="font-display uppercase text-2xl md:text-3xl mb-2 md:mb-3 text-foreground">Excellence</h3>
                   <p className="text-sm md:text-base text-muted-foreground leading-relaxed font-medium">
                     Des trophées et des victoires qui témoignent de notre engagement constant dans la compétition.
                   </p>
@@ -224,10 +253,10 @@ const HomePage = () => {
                   viewport={{ once: true }}
                   className="text-center group"
                 >
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 ring-2 ring-accent/20 group-hover:bg-accent group-hover:ring-accent/40 transition-all duration-300">
-                    <Users className="w-8 h-8 md:w-10 md:h-10 text-accent group-hover:text-accent-foreground transition-colors" />
+                  <div className="hex-clip w-16 h-16 md:w-20 md:h-20 bg-primary/25 ring-1 ring-primary/40 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:bg-primary transition-all duration-300">
+                    <Users className="w-8 h-8 md:w-10 md:h-10 text-primary group-hover:text-primary-foreground transition-colors" />
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-foreground">Équipe</h3>
+                  <h3 className="font-display uppercase text-2xl md:text-3xl mb-2 md:mb-3 text-foreground">Équipe</h3>
                   <p className="text-sm md:text-base text-muted-foreground leading-relaxed font-medium">
                     Des joueurs talentueux unis par la passion du gaming et la cohésion d'un groupe soudé.
                   </p>
@@ -240,10 +269,10 @@ const HomePage = () => {
                   viewport={{ once: true }}
                   className="text-center group"
                 >
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 ring-2 ring-primary/20 group-hover:bg-primary group-hover:ring-primary/40 transition-all duration-300">
+                  <div className="hex-clip w-16 h-16 md:w-20 md:h-20 bg-primary/25 ring-1 ring-primary/40 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:bg-primary transition-all duration-300">
                     <TrendingUp className="w-8 h-8 md:w-10 md:h-10 text-primary group-hover:text-primary-foreground transition-colors" />
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-foreground">Performance</h3>
+                  <h3 className="font-display uppercase text-2xl md:text-3xl mb-2 md:mb-3 text-foreground">Performance</h3>
                   <p className="text-sm md:text-base text-muted-foreground leading-relaxed font-medium">
                     Des statistiques qui reflètent notre progression constante à chaque nouvelle saison.
                   </p>
