@@ -46,7 +46,7 @@ export const useMedia = () => {
 
     const { data: record, error } = await supabase
       .from('media')
-      .insert({ ...rest, url: fileUrl, uploadDate: new Date().toISOString() })
+      .insert({ ...rest, url: fileUrl })
       .select().single();
     if (error) throw new Error(error.message);
     await fetchMedia();
