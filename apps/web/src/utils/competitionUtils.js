@@ -60,7 +60,7 @@ export const generatePoolStandings = (pools, competitionId) => {
       standings.push({
         competitionId,
         poolId: pool.poolId,
-        teamName: team.teamName,
+        team: team.teamName,
         played: 0,
         points: 0,
         goalsFor: 0,
