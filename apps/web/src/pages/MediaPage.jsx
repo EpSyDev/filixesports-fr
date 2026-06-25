@@ -43,7 +43,8 @@ const MediaPage = () => {
             </motion.div>
 
             <Tabs defaultValue="photos" className="w-full">
-              <TabsList className="flex w-auto mx-auto mb-8 h-auto p-1 gap-1">
+              <div className="flex justify-center mb-8">
+              <TabsList className="gap-1">
                 <TabsTrigger value="photos" className="gap-2">
                   <Image className="w-4 h-4" />
                   Photos
@@ -53,6 +54,7 @@ const MediaPage = () => {
                   Vidéos
                 </TabsTrigger>
               </TabsList>
+              </div>
 
               <TabsContent value="photos">
                 {loading ? (
