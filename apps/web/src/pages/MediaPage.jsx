@@ -62,7 +62,7 @@ const MediaPage = () => {
                     ))}
                   </div>
                 ) : photos.length > 0 ? (
-                  <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+                  <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
                     {photos.map((item, index) => (
                       <motion.div
                         key={item.id}
@@ -70,7 +70,7 @@ const MediaPage = () => {
                         whileInView={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                         viewport={{ once: true }}
-                        className="group relative break-inside-avoid rounded-xl overflow-hidden bg-muted"
+                        className="group relative break-inside-avoid mb-6 w-full rounded-xl overflow-hidden"
                       >
                         <img
                           src={item.url}
