@@ -14,7 +14,7 @@ import PoolGenerationHandler from './PoolGenerationHandler';
 import KnockoutBracketManager from './KnockoutBracketManager';
 import ClubBadge from './ClubBadge';
 import { useCompetitionLock } from '@/hooks/useCompetitionLock';
-import { calculatePoolStandings } from '@/utils/competitionUtils';
+import { calculatePoolStandings, advanceWinnerToNextRound, getSemiLoserAdvancement } from '@/utils/competitionUtils';
 import { toast } from 'sonner';
 import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock, CheckSquare, Square, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -229,6 +229,38 @@ const TournamentManager = ({ competition }) => {
     }
   };
 
+  // Sauvegarde inline d'un match knockout depuis l'onglet Résultats
+  const handleSaveKnockoutMatchResult = async (matchId, homeScore, awayScore) => {
+    const match = knockoutMatches.find(m => m.id === matchId);
+    if (!match) return;
+    const hs = homeScore !== '' ? Number(homeScore) : null;
+    const as_ = awayScore !== '' ? Number(awayScore) : null;
+    const isPlayed = hs !== null && as_ !== null;
+    const winner = isPlayed
+      ? (hs > as_ ? match.homeTeam : as_ > hs ? match.awayTeam : match.winner ?? null)
+      : null;
+    const updatedMatch = { id: match.id, competitionId: match.competitionId, round: match.round, matchNumber: match.matchNumber, homeTeam: match.homeTeam, awayTeam: match.awayTeam, homeScore: hs, awayScore: as_, status: isPlayed ? 'played' : 'scheduled', winner };
+    const { error } = await supabase.from('knockout_matches').update(updatedMatch).eq('id', matchId);
+    if (error) throw error;
+    const newState = knockoutMatches.map(m => m.id === matchId ? updatedMatch : m);
+    if (isPlayed && winner) {
+      const adv = advanceWinnerToNextRound(winner, match.round, match.matchNumber, newState);
+      if (adv) {
+        if (adv.isNew) await supabase.from('knockout_matches').insert({ ...adv.newMatch, competitionId: competition.id });
+        else await supabase.from('knockout_matches').update(adv.updates).eq('id', adv.matchId);
+      }
+      if (String(match.round) === '4') {
+        const loser = winner === match.homeTeam ? match.awayTeam : match.homeTeam;
+        const loserAdv = getSemiLoserAdvancement(loser, match.matchNumber, newState);
+        if (loserAdv) {
+          if (loserAdv.isNew) await supabase.from('knockout_matches').insert({ ...loserAdv.newMatch, competitionId: competition.id });
+          else await supabase.from('knockout_matches').update(loserAdv.updates).eq('id', loserAdv.matchId);
+        }
+      }
+    }
+    await fetchTournamentData();
+  };
+
   const handleTabChange = (value) => {
     if (value === 'knockout' && !isLocked && knockoutMatches.length === 0) {
       toast.error("Verrouillez d'abord les sélections pour accéder à la phase finale.");
@@ -266,19 +298,21 @@ const TournamentManager = ({ competition }) => {
       </Card>
 
       <div className="overflow-x-auto pb-2 mb-4 md:mb-6 custom-scrollbar">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full min-w-[500px]">
-          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 h-auto">
-            <TabsTrigger value="teams" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">1. Équipes</TabsTrigger>
-            <TabsTrigger value="assignment" disabled={!isReadyForPools && pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">2. Répartition</TabsTrigger>
-            <TabsTrigger value="pools" disabled={pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px]">3. Poules</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full min-w-[700px]">
+          <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 h-auto">
+            <TabsTrigger value="teams" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px] text-xs md:text-sm">Équipes</TabsTrigger>
+            <TabsTrigger value="assignment" disabled={!isReadyForPools && pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px] text-xs md:text-sm">Répartition</TabsTrigger>
+            <TabsTrigger value="pools" disabled={pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px] text-xs md:text-sm">Poules</TabsTrigger>
+            <TabsTrigger value="classements" disabled={pools.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px] text-xs md:text-sm">Classements</TabsTrigger>
+            <TabsTrigger value="resultats" disabled={pools.length === 0 && knockoutMatches.length === 0} className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 min-h-[44px] text-xs md:text-sm">Résultats</TabsTrigger>
             <TabsTrigger
               value="knockout"
               className={cn(
-                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all py-2.5 min-h-[44px]",
+                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all py-2.5 min-h-[44px] text-xs md:text-sm",
                 (!isLocked && knockoutMatches.length === 0) && "opacity-50 cursor-not-allowed"
               )}
             >
-              4. Phase Finale
+              Finale
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -572,6 +606,126 @@ const TournamentManager = ({ competition }) => {
                 })}
               </div>
             </>
+          )}
+        </TabsContent>
+
+        {/* === CLASSEMENTS === */}
+        <TabsContent value="classements" className="space-y-6">
+          {pools.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-muted/20">
+              Aucune poule générée.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {pools.map(pool => {
+                const standings = poolStandings.filter(s => s.poolId === pool.poolId).sort((a, b) => a.rank - b.rank);
+                return (
+                  <Card key={pool.id} className="bg-card border-border shadow-sm overflow-hidden relative">
+                    {isUpdatingStandings && <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10" />}
+                    <CardHeader className="bg-muted/30 border-b py-3">
+                      <CardTitle className="text-lg">{pool.name || pool.poolId}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto custom-scrollbar">
+                        <Table className="min-w-[480px]">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8 text-center">#</TableHead>
+                              <TableHead>Équipe</TableHead>
+                              <TableHead className="text-center w-10">J</TableHead>
+                              <TableHead className="text-center w-10">V</TableHead>
+                              <TableHead className="text-center w-10">N</TableHead>
+                              <TableHead className="text-center w-10">D</TableHead>
+                              <TableHead className="text-center w-14 text-primary font-bold">PTS</TableHead>
+                              <TableHead className="text-center w-14">Diff</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {standings.map((s, idx) => (
+                              <TableRow key={s.id} className={cn(qualifiedTeams.some(q => q.id === s.id) && 'bg-emerald-50/60 dark:bg-emerald-950/30')}>
+                                <TableCell className="text-center font-bold text-muted-foreground">{s.rank}</TableCell>
+                                <TableCell className="font-medium">
+                                  <ClubBadge teamName={s.teamName} />
+                                  {qualifiedTeams.some(q => q.id === s.id) && (
+                                    <Badge variant="secondary" className="ml-2 text-[9px] py-0 px-1.5 h-4 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-0">Qualifié</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-center text-muted-foreground">{s.played ?? 0}</TableCell>
+                                <TableCell className="text-center text-emerald-600 font-medium">{s.won ?? 0}</TableCell>
+                                <TableCell className="text-center text-muted-foreground">{s.drawn ?? 0}</TableCell>
+                                <TableCell className="text-center text-destructive/70">{s.lost ?? 0}</TableCell>
+                                <TableCell className="text-center font-bold text-primary">{s.points ?? 0}</TableCell>
+                                <TableCell className="text-center text-muted-foreground">
+                                  {(s.goalsFor ?? 0) - (s.goalsAgainst ?? 0) > 0
+                                    ? `+${(s.goalsFor ?? 0) - (s.goalsAgainst ?? 0)}`
+                                    : (s.goalsFor ?? 0) - (s.goalsAgainst ?? 0)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* === RÉSULTATS === */}
+        <TabsContent value="resultats" className="space-y-8">
+          {/* Phase de Poules */}
+          {pools.length > 0 && (
+            <Card className="bg-card border-border shadow-md">
+              <CardHeader><CardTitle className="text-lg">Phase de Poules</CardTitle></CardHeader>
+              <CardContent className="space-y-8">
+                {pools.map(pool => {
+                  const matchesForPool = poolMatches.filter(m => m.poolId === pool.poolId);
+                  if (matchesForPool.length === 0) return null;
+                  return (
+                    <div key={pool.id}>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground border-b pb-2 mb-3">{pool.name || pool.poolId}</h4>
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                        {matchesForPool.map(match => (
+                          <InlineMatchScoreInput key={match.id} match={match} onSave={handleSavePoolMatch} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Phase Finale */}
+          {knockoutMatches.length > 0 && (
+            <Card className="bg-card border-border shadow-md">
+              <CardHeader><CardTitle className="text-lg">Phase Finale</CardTitle></CardHeader>
+              <CardContent className="space-y-8">
+                {['16', '8', '4', '2', '1'].map(round => {
+                  const roundMatches = knockoutMatches.filter(m => m.round === round && (m.homeTeam || m.awayTeam));
+                  if (roundMatches.length === 0) return null;
+                  const label = { '16': 'Huitièmes', '8': 'Quarts de finale', '4': 'Demi-finales', '2': 'Finale', '1': '3e place' }[round];
+                  return (
+                    <div key={round}>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground border-b pb-2 mb-3">{label}</h4>
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                        {roundMatches.map(match => (
+                          <InlineMatchScoreInput key={match.id} match={match} onSave={handleSaveKnockoutMatchResult} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          {pools.length === 0 && knockoutMatches.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-muted/20">
+              Aucun match disponible.
+            </div>
           )}
         </TabsContent>
 
