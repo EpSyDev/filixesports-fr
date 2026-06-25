@@ -169,8 +169,10 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
       {/* En-tête : badge + nom de l'équipe */}
       <div className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-b from-slate-950 to-slate-900 border-b border-white/10">
         <img src="/logo.webp" alt="KOTIYA FC" crossOrigin="anonymous" className="w-9 h-9 md:w-11 md:h-11 object-contain drop-shadow" />
-        <h2 className="text-xl md:text-3xl font-black tracking-tight text-white uppercase">
-          {teamName?.trim() || 'KOTIYA FC'}
+        <h2 className="font-display text-xl md:text-3xl tracking-[0.18em] uppercase">
+          <span className="text-white">{(teamName?.trim() || 'KOTIYA').split(' ')[0]}</span>
+          {' '}
+          <span className="text-primary">{(teamName?.trim() || 'KOTIYA FC').split(' ').slice(1).join(' ') || 'FC'}</span>
         </h2>
       </div>
 
@@ -224,7 +226,7 @@ const FormationField = ({ composition, onPlayerDrop, onPlayerRemove, isReadOnly,
           src="/logo.webp"
           alt=""
           crossOrigin="anonymous"
-          className="absolute bottom-3 right-3 z-20 w-8 h-8 md:w-10 md:h-10 object-contain opacity-80 drop-shadow"
+          className="absolute bottom-3 right-3 z-20 w-12 h-12 md:w-16 md:h-16 object-contain opacity-90 drop-shadow"
         />
       </div>
     </div>
