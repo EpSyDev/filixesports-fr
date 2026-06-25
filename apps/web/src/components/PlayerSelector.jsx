@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Search, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const PlayerSelector = ({ players, availablePlayerIds, onDragStart }) => {
+const PlayerSelector = ({ players, availablePlayerIds, onDragStart, selectedPlayer, onPlayerSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredPlayers = players.filter(player => {
@@ -44,7 +44,11 @@ const PlayerSelector = ({ players, availablePlayerIds, onDragStart }) => {
               key={player.id}
               draggable
               onDragStart={(e) => onDragStart(e, player)}
-              className="draggable-player flex items-center p-3 gap-3 bg-background border rounded-xl shadow-sm hover:border-primary/50 cursor-grab active:cursor-grabbing"
+              onClick={() => onPlayerSelect?.(player)}
+              className={cn(
+                "draggable-player flex items-center p-3 gap-3 bg-background border rounded-xl shadow-sm hover:border-primary/50 cursor-grab active:cursor-grabbing",
+                selectedPlayer?.id === player.id ? "border-primary bg-primary/10 ring-1 ring-primary/40" : ""
+              )}
             >
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-border">
                 {(player.image || player.photo) ? (
