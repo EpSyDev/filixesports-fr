@@ -12,3 +12,6 @@ apps/web/tools/
 apps/pocketbase/
 .version
 .playwright-mcp/
+
+# Runner local Pro Clubs (contient la clé service_role — ne jamais committer)
+scripts/proclubs-sync.local.cmd
