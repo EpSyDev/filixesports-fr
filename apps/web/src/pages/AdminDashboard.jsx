@@ -52,16 +52,12 @@ const AdminDashboard = () => {
     }
     setAdminSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-admin', {
-        body: { email: adminForm.email, password: adminForm.password },
+      const { data, error } = await supabase.rpc('create_admin', {
+        new_email: adminForm.email,
+        new_password: adminForm.password,
       });
-      if (error) {
-        // Les erreurs applicatives (400/401) arrivent dans le corps de la réponse.
-        const message = (await error.context?.json?.().catch(() => null))?.error;
-        throw new Error(message || error.message);
-      }
-      if (data?.error) throw new Error(data.error);
-      toast.success(`Administrateur ${data.user.email} créé`);
+      if (error) throw new Error(error.message);
+      toast.success(`Administrateur ${data.email} créé`);
       setAdminForm({ email: '', password: '' });
     } catch (err) {
       toast.error(`Échec : ${err.message || 'erreur inconnue'}`);
@@ -602,7 +598,7 @@ const AdminDashboard = () => {
                       </form>
                       <div className="mt-5 flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 border border-primary/10 rounded-lg p-3">
                         <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <span>La création passe par une fonction serveur sécurisée : la clé d'administration n'est jamais exposée dans le navigateur.</span>
+                        <span>La création passe par une fonction serveur sécurisée : réservée aux administrateurs connectés, aucune clé sensible n'est exposée dans le navigateur.</span>
                       </div>
                     </CardContent>
                   </Card>
