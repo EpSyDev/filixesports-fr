@@ -1,0 +1,22 @@
+name: Sync Pro Clubs
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # toutes les heures
+  workflow_dispatch: {}    # déclenchement manuel depuis l'onglet Actions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Synchroniser les stats EA Pro Clubs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PROCLUBS_CLUB_ID: '907897'
+          PROCLUBS_PLATFORM: 'common-gen5'
+        run: node scripts/proclubs-sync.mjs
