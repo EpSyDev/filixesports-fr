@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Plus, Trash2, CalendarDays, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Trash2, CalendarDays, Loader2, Sparkles, Search, X } from 'lucide-react';
 import InlineMatchScoreInput from './InlineMatchScoreInput.jsx';
 import { generateRoundRobinMatches, calculateLeagueStandings } from '@/utils/competitionUtils';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ const MatchManager = ({ competitionId }) => {
   const [standings, setStandings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resultSearch, setResultSearch] = useState('');
   
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [generateType, setGenerateType] = useState('single');
@@ -283,17 +285,52 @@ const MatchManager = ({ competitionId }) => {
       </Card>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground">Liste des Matchs ({matches.length})</h3>
+        {(() => {
+        const term = resultSearch.trim().toLowerCase();
+        const filteredMatches = term
+          ? matches.filter(m =>
+              (m.homeTeam || '').toLowerCase().includes(term) ||
+              (m.awayTeam || '').toLowerCase().includes(term))
+          : matches;
+        return (
+        <>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="text-lg font-bold text-foreground">Liste des Matchs ({filteredMatches.length})</h3>
+          {matches.length > 0 && (
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                value={resultSearch}
+                onChange={(e) => setResultSearch(e.target.value)}
+                placeholder="Rechercher une équipe…"
+                className="pl-9 pr-9 min-h-[44px]"
+              />
+              {resultSearch && (
+                <button
+                  type="button"
+                  onClick={() => setResultSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Effacer la recherche"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
         {matches.length === 0 ? (
           <div className="text-center p-8 border border-dashed rounded-xl bg-muted/20 text-muted-foreground">
             Aucun match n'a encore été créé pour cette compétition. Générez un calendrier ou ajoutez-en manuellement.
           </div>
+        ) : filteredMatches.length === 0 ? (
+          <div className="text-center p-8 border border-dashed rounded-xl bg-muted/20 text-muted-foreground">
+            Aucun match trouvé pour «&nbsp;{resultSearch.trim()}&nbsp;».
+          </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(
-              matches.reduce((acc, match) => {
+              filteredMatches.reduce((acc, match) => {
                 const day = match.matchday || 1;
                 (acc[day] = acc[day] || []).push(match);
                 return acc;
@@ -340,6 +377,9 @@ const MatchManager = ({ competitionId }) => {
               })}
           </div>
         )}
+        </>
+        );
+        })()}
       </div>
     </div>
   );
