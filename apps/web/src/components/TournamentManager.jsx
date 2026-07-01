@@ -16,7 +16,7 @@ import ClubBadge from './ClubBadge';
 import { useCompetitionLock } from '@/hooks/useCompetitionLock';
 import { calculatePoolStandings, advanceWinnerToNextRound, getSemiLoserAdvancement } from '@/utils/competitionUtils';
 import { toast } from 'sonner';
-import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock, CheckSquare, Square, Trophy } from 'lucide-react';
+import { Trash2, Network, Plus, ArrowRight, Edit, RotateCcw, Lock, Unlock, CheckSquare, Square, Trophy, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TournamentManager = ({ competition }) => {
@@ -30,6 +30,7 @@ const TournamentManager = ({ competition }) => {
   const [newTeam, setNewTeam] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('teams');
+  const [resultSearch, setResultSearch] = useState('');
   const [isUpdatingStandings, setIsUpdatingStandings] = useState(false);
 
   const [draftPools, setDraftPools] = useState([]);
@@ -675,13 +676,46 @@ const TournamentManager = ({ competition }) => {
 
         {/* === RÉSULTATS === */}
         <TabsContent value="resultats" className="space-y-8">
+          {(() => {
+          const term = resultSearch.trim().toLowerCase();
+          const matchesTeam = (m) => !term
+            || (m.homeTeam || '').toLowerCase().includes(term)
+            || (m.awayTeam || '').toLowerCase().includes(term);
+          const filteredPoolMatches = poolMatches.filter(matchesTeam);
+          const filteredKnockoutMatches = knockoutMatches.filter(matchesTeam);
+          const noSearchResult = term && filteredPoolMatches.length === 0 && filteredKnockoutMatches.length === 0;
+          return (
+          <>
+          {(pools.length > 0 || knockoutMatches.length > 0) && (
+            <div className="max-w-md relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                value={resultSearch}
+                onChange={(e) => setResultSearch(e.target.value)}
+                placeholder="Rechercher une équipe…"
+                className="pl-9 pr-9 min-h-[44px]"
+              />
+              {resultSearch && (
+                <button
+                  type="button"
+                  onClick={() => setResultSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Effacer la recherche"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Phase de Poules */}
-          {pools.length > 0 && (
+          {pools.length > 0 && filteredPoolMatches.length > 0 && (
             <Card className="bg-card border-border shadow-md">
               <CardHeader><CardTitle className="text-lg">Phase de Poules</CardTitle></CardHeader>
               <CardContent className="space-y-8">
                 {pools.map(pool => {
-                  const matchesForPool = poolMatches.filter(m => m.poolId === pool.poolId);
+                  const matchesForPool = filteredPoolMatches.filter(m => m.poolId === pool.poolId);
                   if (matchesForPool.length === 0) return null;
                   return (
                     <div key={pool.id}>
@@ -699,12 +733,12 @@ const TournamentManager = ({ competition }) => {
           )}
 
           {/* Phase Finale */}
-          {knockoutMatches.length > 0 && (
+          {knockoutMatches.length > 0 && filteredKnockoutMatches.length > 0 && (
             <Card className="bg-card border-border shadow-md">
               <CardHeader><CardTitle className="text-lg">Phase Finale</CardTitle></CardHeader>
               <CardContent className="space-y-8">
                 {['16', '8', '4', '2', '1'].map(round => {
-                  const roundMatches = knockoutMatches.filter(m => m.round === round && (m.homeTeam || m.awayTeam));
+                  const roundMatches = filteredKnockoutMatches.filter(m => m.round === round && (m.homeTeam || m.awayTeam));
                   if (roundMatches.length === 0) return null;
                   const label = { '16': 'Huitièmes', '8': 'Quarts de finale', '4': 'Demi-finales', '2': 'Finale', '1': '3e place' }[round];
                   return (
@@ -727,6 +761,15 @@ const TournamentManager = ({ competition }) => {
               Aucun match disponible.
             </div>
           )}
+
+          {noSearchResult && (
+            <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-muted/20">
+              Aucun match trouvé pour «&nbsp;{resultSearch.trim()}&nbsp;».
+            </div>
+          )}
+          </>
+          );
+          })()}
         </TabsContent>
 
         {/* === PHASE FINALE === */}
