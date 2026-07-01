@@ -46,6 +46,9 @@ const Footer = () => {
               <Link to="/palmares" className="flex items-center min-h-[44px] text-sm text-slate-400 hover:text-accent transition-all duration-200">
                 Palmarès
               </Link>
+              <Link to="/proclubs" className="flex items-center min-h-[44px] text-sm text-slate-400 hover:text-accent transition-all duration-200">
+                Pro Clubs
+              </Link>
               <Link to="/soutien" className="flex items-center min-h-[44px] text-sm text-slate-400 hover:text-accent transition-all duration-200">
                 Soutenir le club
               </Link>

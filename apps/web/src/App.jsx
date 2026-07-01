@@ -15,6 +15,7 @@ import StatsJoueursPage from './pages/StatsJoueursPage';
 import StatsEquipePage from './pages/StatsEquipePage';
 import PalmaresPage from './pages/PalmaresPage';
 import MediaPage from './pages/MediaPage';
+import ProClubsPage from './pages/ProClubsPage';
 import SoutienPage from './pages/SoutienPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/stats-equipe" element={<StatsEquipePage />} />
           <Route path="/palmares" element={<PalmaresPage />} />
           <Route path="/media" element={<MediaPage />} />
+          <Route path="/proclubs" element={<ProClubsPage />} />
           <Route path="/soutien" element={<SoutienPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route 

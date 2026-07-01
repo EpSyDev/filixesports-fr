@@ -29,6 +29,7 @@ const NAV = [
     children: [
       { label: 'Stats Joueurs', path: '/stats-joueurs' },
       { label: 'Stats Équipe', path: '/stats-equipe' },
+      { label: 'Pro Clubs', path: '/proclubs' },
     ],
   },
   { label: 'Média', path: '/media' },
