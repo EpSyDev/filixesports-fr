@@ -10,7 +10,7 @@ import { Heart, ShieldCheck, Sparkles } from 'lucide-react';
 // ──────────────────────────────────────────────────────────────
 // Collez ici le lien PayPal (PayPal.me ou bouton "Donate").
 // Tant que la valeur est vide, la page affiche « Bientôt disponible ».
-const PAYPAL_URL = '';
+const PAYPAL_URL = 'https://paypal.me/KotiyaFC';
 // ──────────────────────────────────────────────────────────────
 
 const PERKS = [
