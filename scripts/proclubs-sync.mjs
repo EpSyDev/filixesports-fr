@@ -1,26 +1,28 @@
 #!/usr/bin/env node
 // ============================================================
 //  Synchronisation EA Pro Clubs → Supabase
-//  Récupère les stats du club sur l'API EA et les upsert dans
-//  les tables proclubs_*. Sans dépendance (fetch natif Node 18+).
+//  Récupère les stats du club sur l'API EA et les envoie à la
+//  fonction sécurisée ingest_proclubs (clé anon publique + jeton).
+//  Aucune clé sensible requise. Sans dépendance (fetch natif Node 18+).
 //
-//  Variables d'environnement requises :
-//    SUPABASE_URL                ex. https://xxxx.supabase.co
-//    SUPABASE_SERVICE_ROLE_KEY   clé service_role (jamais côté client)
-//  Optionnelles :
-//    PROCLUBS_CLUB_ID   (défaut 907897)
-//    PROCLUBS_PLATFORM  (défaut common-gen5)
+//  Seule variable à fournir :
+//    PROCLUBS_INGEST_SECRET   jeton d'ingestion (fourni par l'admin)
+//  Optionnelles (valeurs par défaut adaptées au projet KOTIYA) :
+//    SUPABASE_URL, SUPABASE_ANON_KEY, PROCLUBS_CLUB_ID, PROCLUBS_PLATFORM
 //
-//  Lancement : node scripts/proclubs-sync.mjs
+//  Lancement : PROCLUBS_INGEST_SECRET=xxx node scripts/proclubs-sync.mjs
 // ============================================================
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// URL + clé anon sont PUBLIQUES (déjà exposées dans le site) → valeurs par défaut ok.
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uydhqfhdchowkuwlxhzl.supabase.co';
+const ANON_KEY = process.env.SUPABASE_ANON_KEY
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5ZGhxZmhkY2hvd2t1d2x4aHpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MjI0NTksImV4cCI6MjA5NzI5ODQ1OX0.5Sk44XS2eLC5XBZtzPI8TifjoPlzfj2BPwK-FCPEuMg';
+const INGEST_SECRET = process.env.PROCLUBS_INGEST_SECRET;
 const CLUB_ID = process.env.PROCLUBS_CLUB_ID || '907897';
 const PLATFORM = process.env.PROCLUBS_PLATFORM || 'common-gen5';
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('❌ SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.');
+if (!INGEST_SECRET) {
+  console.error('❌ PROCLUBS_INGEST_SECRET est requis (jeton fourni par l\'admin du club).');
   process.exit(1);
 }
 
@@ -52,24 +54,24 @@ async function eaFetch(path, tries = 3) {
   }
 }
 
-async function upsert(table, rows, onConflict) {
-  if (!rows || (Array.isArray(rows) && rows.length === 0)) return;
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/${table}?on_conflict=${onConflict}`,
-    {
-      method: 'POST',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal',
-      },
-      body: JSON.stringify(Array.isArray(rows) ? rows : [rows]),
-    }
-  );
+async function ingest(club, players, matches) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ingest_proclubs`, {
+    method: 'POST',
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${ANON_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      p_secret: INGEST_SECRET,
+      p_club: club,
+      p_players: players,
+      p_matches: matches,
+    }),
+  });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Supabase upsert ${table} → HTTP ${res.status} ${body}`);
+    throw new Error(`Ingestion Supabase → HTTP ${res.status} ${body}`);
   }
 }
 
@@ -82,7 +84,7 @@ async function main() {
   const club = info?.[CLUB_ID] || {};
   const o = overallArr?.[0] || {};
 
-  await upsert('proclubs_club', {
+  const clubRow = {
     club_id: CLUB_ID,
     name: club.name ?? null,
     stadium: club.customKit?.stadName ?? null,
@@ -102,7 +104,7 @@ async function main() {
     reputation_tier: num(o.reputationtier),
     league_appearances: num(o.leagueAppearances),
     updated_at: nowIso,
-  }, 'club_id');
+  };
 
   // ③ Joueurs
   const members = await eaFetch(`members/stats?platform=${PLATFORM}&clubId=${CLUB_ID}`);
@@ -130,7 +132,6 @@ async function main() {
     prev_goals: [1,2,3,4,5,6,7,8,9,10].map((i) => num(m[`prevGoals${i}`])),
     updated_at: nowIso,
   }));
-  await upsert('proclubs_players', playerRows, 'club_id,name');
 
   // ④ Matchs récents (ligue)
   const matches = await eaFetch(`clubs/matches?matchType=leagueMatch&platform=${PLATFORM}&clubIds=${CLUB_ID}&maxResultCount=15`);
@@ -155,7 +156,9 @@ async function main() {
       updated_at: nowIso,
     };
   });
-  await upsert('proclubs_matches', matchRows, 'match_id');
+
+  // Envoi unique à la fonction sécurisée
+  await ingest(clubRow, playerRows, matchRows);
 
   console.log(`✅ Sync OK — ${club.name || CLUB_ID} : ${playerRows.length} joueurs, ${matchRows.length} matchs.`);
 }
