@@ -17,7 +17,7 @@ import MediaUpload from '@/components/MediaUpload';
 import MatchPlayerStats from '@/components/MatchPlayerStats';
 import CompetitionManagement from '@/components/CompetitionManagement';
 import { toast } from 'sonner';
-import { Trash2, Upload, X, Database, HardDrive, Users, Trophy, Clapperboard, Swords } from 'lucide-react';
+import { Trash2, Upload, X, Database, HardDrive, Users, Trophy, Clapperboard, Swords, UserPlus, ShieldCheck } from 'lucide-react';
 import { useStorageUsage, formatBytes, DB_LIMIT_MB } from '@/hooks/useStorageUsage';
 
 const AdminDashboard = () => {
@@ -40,6 +40,35 @@ const AdminDashboard = () => {
   const [trophyForm, setTrophyForm] = useState({
     name: '', year: '', competition: '', image: null, description: ''
   });
+
+  const [adminForm, setAdminForm] = useState({ email: '', password: '' });
+  const [adminSubmitting, setAdminSubmitting] = useState(false);
+
+  const handleAdminSubmit = async (e) => {
+    e.preventDefault();
+    if (adminForm.password.length < 8) {
+      toast.error('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+    setAdminSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-admin', {
+        body: { email: adminForm.email, password: adminForm.password },
+      });
+      if (error) {
+        // Les erreurs applicatives (400/401) arrivent dans le corps de la réponse.
+        const message = (await error.context?.json?.().catch(() => null))?.error;
+        throw new Error(message || error.message);
+      }
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Administrateur ${data.user.email} créé`);
+      setAdminForm({ email: '', password: '' });
+    } catch (err) {
+      toast.error(`Échec : ${err.message || 'erreur inconnue'}`);
+    } finally {
+      setAdminSubmitting(false);
+    }
+  };
 
   const handleMatchSubmit = async (e) => {
     e.preventDefault();
@@ -197,6 +226,7 @@ const AdminDashboard = () => {
                   <TabsTrigger value="players" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Joueurs</TabsTrigger>
                   <TabsTrigger value="trophies" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Trophées</TabsTrigger>
                   <TabsTrigger value="media" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Média</TabsTrigger>
+                  <TabsTrigger value="access" className="py-2.5 px-4 min-h-[44px] font-bold uppercase tracking-wide text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow">Accès</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -525,6 +555,58 @@ const AdminDashboard = () => {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="access" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="max-w-xl">
+                  <Card className="shadow-lg shadow-black/30 border-primary/15">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserPlus className="w-5 h-5 text-primary" />
+                        Ajouter un administrateur
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-5">
+                        Le compte créé aura un accès complet au tableau de bord. Choisissez un mot de passe robuste (8 caractères minimum) et transmettez-le de façon sécurisée.
+                      </p>
+                      <form onSubmit={handleAdminSubmit} className="space-y-4">
+                        <div className="space-y-1">
+                          <Label>Adresse e-mail</Label>
+                          <Input
+                            type="email"
+                            autoComplete="off"
+                            placeholder="nouvel.admin@exemple.fr"
+                            value={adminForm.email}
+                            onChange={e => setAdminForm(p => ({ ...p, email: e.target.value }))}
+                            required
+                            className="min-h-[44px]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Mot de passe</Label>
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="8 caractères minimum"
+                            value={adminForm.password}
+                            onChange={e => setAdminForm(p => ({ ...p, password: e.target.value }))}
+                            required
+                            minLength={8}
+                            className="min-h-[44px]"
+                          />
+                        </div>
+                        <Button type="submit" disabled={adminSubmitting} className="w-full transition-all duration-200 active:scale-[0.98] min-h-[44px]">
+                          {adminSubmitting ? 'Création...' : 'Créer l\'administrateur'}
+                        </Button>
+                      </form>
+                      <div className="mt-5 flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 border border-primary/10 rounded-lg p-3">
+                        <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <span>La création passe par une fonction serveur sécurisée : la clé d'administration n'est jamais exposée dans le navigateur.</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

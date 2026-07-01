@@ -15,6 +15,7 @@ import StatsJoueursPage from './pages/StatsJoueursPage';
 import StatsEquipePage from './pages/StatsEquipePage';
 import PalmaresPage from './pages/PalmaresPage';
 import MediaPage from './pages/MediaPage';
+import SoutienPage from './pages/SoutienPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -36,6 +37,7 @@ function App() {
           <Route path="/stats-equipe" element={<StatsEquipePage />} />
           <Route path="/palmares" element={<PalmaresPage />} />
           <Route path="/media" element={<MediaPage />} />
+          <Route path="/soutien" element={<SoutienPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route 
             path="/admin" 

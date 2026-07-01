@@ -32,6 +32,7 @@ const NAV = [
     ],
   },
   { label: 'Média', path: '/media' },
+  { label: 'Soutien', path: '/soutien' },
 ];
 
 const Header = () => {
