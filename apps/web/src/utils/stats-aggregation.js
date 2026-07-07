@@ -1,18 +1,32 @@
 
+const EMPTY_PLAYER_STATS = {
+  totalGoals: 0,
+  totalAssists: 0,
+  totalShots: 0,
+  totalPasses: 0,
+  totalTackles: 0,
+  totalOffsides: 0,
+  totalBallsRecovered: 0,
+  totalBallsLost: 0,
+  avgPassAccuracy: 0,
+  avgShotAccuracy: 0,
+  totalMatches: 0,
+  averageRating: 0,
+  yellowCards: 0,
+  redCards: 0,
+  motm: 0,
+  // gardiens
+  totalShotsFaced: 0,
+  totalShotsOnTargetFaced: 0,
+  totalSaves: 0,
+  totalGoalsConceded: 0,
+  totalPenaltiesSaved: 0,
+  totalPenaltyGoalsConceded: 0,
+};
+
 export const calculatePlayerStats = (playerStats) => {
   if (!playerStats || playerStats.length === 0) {
-    return {
-      totalGoals: 0,
-      totalAssists: 0,
-      totalShots: 0,
-      totalPasses: 0,
-      totalTackles: 0,
-      totalMatches: 0,
-      averageRating: 0,
-      yellowCards: 0,
-      redCards: 0,
-      motm: 0
-    };
+    return { ...EMPTY_PLAYER_STATS };
   }
 
   // Un match est compté comme joué dès qu'une note est saisie ou qu'une stat
@@ -21,6 +35,10 @@ export const calculatePlayerStats = (playerStats) => {
     (stat.rating != null && stat.rating !== '') ||
     stat.goals > 0 || stat.assists > 0 || stat.shots > 0 ||
     stat.passes > 0 || stat.tackles > 0 ||
+    stat.offsides > 0 || stat.balls_recovered > 0 || stat.balls_lost > 0 ||
+    stat.pass_accuracy != null || stat.shot_accuracy != null ||
+    stat.shots_faced > 0 || stat.shots_on_target_faced > 0 || stat.saves > 0 ||
+    stat.goals_conceded > 0 || stat.penalties_saved > 0 || stat.penalty_goals_conceded > 0 ||
     stat.yellowCards > 0 || stat.redCards > 0 ||
     (stat.notes || '').includes('MOTM');
 
@@ -31,17 +49,31 @@ export const calculatePlayerStats = (playerStats) => {
       shots: acc.shots + (stat.shots || 0),
       passes: acc.passes + (stat.passes || 0),
       tackles: acc.tackles + (stat.tackles || 0),
+      offsides: acc.offsides + (stat.offsides || 0),
+      ballsRecovered: acc.ballsRecovered + (stat.balls_recovered || 0),
+      ballsLost: acc.ballsLost + (stat.balls_lost || 0),
+      passAccuracies: stat.pass_accuracy != null ? [...acc.passAccuracies, stat.pass_accuracy] : acc.passAccuracies,
+      shotAccuracies: stat.shot_accuracy != null ? [...acc.shotAccuracies, stat.shot_accuracy] : acc.shotAccuracies,
+      shotsFaced: acc.shotsFaced + (stat.shots_faced || 0),
+      shotsOnTargetFaced: acc.shotsOnTargetFaced + (stat.shots_on_target_faced || 0),
+      saves: acc.saves + (stat.saves || 0),
+      goalsConceded: acc.goalsConceded + (stat.goals_conceded || 0),
+      penaltiesSaved: acc.penaltiesSaved + (stat.penalties_saved || 0),
+      penaltyGoalsConceded: acc.penaltyGoalsConceded + (stat.penalty_goals_conceded || 0),
       matches: acc.matches + (hasPlayed(stat) ? 1 : 0),
       ratings: stat.rating ? [...acc.ratings, stat.rating] : acc.ratings,
       yellowCards: acc.yellowCards + (stat.yellowCards || 0),
       redCards: acc.redCards + (stat.redCards || 0),
       motm: acc.motm + ((stat.notes || '').includes('MOTM') ? 1 : 0)
     };
-  }, { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, matches: 0, ratings: [], yellowCards: 0, redCards: 0, motm: 0 });
+  }, {
+    goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0,
+    offsides: 0, ballsRecovered: 0, ballsLost: 0, passAccuracies: [], shotAccuracies: [],
+    shotsFaced: 0, shotsOnTargetFaced: 0, saves: 0, goalsConceded: 0, penaltiesSaved: 0, penaltyGoalsConceded: 0,
+    matches: 0, ratings: [], yellowCards: 0, redCards: 0, motm: 0
+  });
 
-  const averageRating = totals.ratings.length > 0
-    ? totals.ratings.reduce((sum, r) => sum + r, 0) / totals.ratings.length
-    : 0;
+  const avg = (arr) => arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
 
   return {
     totalGoals: totals.goals,
@@ -49,11 +81,22 @@ export const calculatePlayerStats = (playerStats) => {
     totalShots: totals.shots,
     totalPasses: totals.passes,
     totalTackles: totals.tackles,
+    totalOffsides: totals.offsides,
+    totalBallsRecovered: totals.ballsRecovered,
+    totalBallsLost: totals.ballsLost,
+    avgPassAccuracy: Math.round(avg(totals.passAccuracies)),
+    avgShotAccuracy: Math.round(avg(totals.shotAccuracies)),
     totalMatches: totals.matches,
-    averageRating: parseFloat(averageRating.toFixed(1)),
+    averageRating: parseFloat(avg(totals.ratings).toFixed(1)),
     yellowCards: totals.yellowCards,
     redCards: totals.redCards,
-    motm: totals.motm
+    motm: totals.motm,
+    totalShotsFaced: totals.shotsFaced,
+    totalShotsOnTargetFaced: totals.shotsOnTargetFaced,
+    totalSaves: totals.saves,
+    totalGoalsConceded: totals.goalsConceded,
+    totalPenaltiesSaved: totals.penaltiesSaved,
+    totalPenaltyGoalsConceded: totals.penaltyGoalsConceded,
   };
 };
 

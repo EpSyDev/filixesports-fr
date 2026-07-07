@@ -7,8 +7,47 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import supabase from '@/lib/supabaseClient';
 import { toast } from 'sonner';
-import { Minus, Plus, Save, Trophy, Target, ArrowRightLeft, Shield } from 'lucide-react';
+import { Minus, Plus, Save, Trophy, Target, ArrowRightLeft, Shield, Hand } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const GK_POSITION = 'GB';
+
+const EMPTY_STAT = {
+  rating: '', isMotm: false, notes: '',
+  // joueurs de champ
+  goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0,
+  offsides: 0, balls_recovered: 0, balls_lost: 0,
+  pass_accuracy: '', shot_accuracy: '',
+  // gardiens
+  shots_faced: 0, shots_on_target_faced: 0, saves: 0,
+  goals_conceded: 0, penalties_saved: 0, penalty_goals_conceded: 0,
+};
+
+// Champs (steppers) pour joueurs de champ
+const OUTFIELD_COUNTERS = [
+  { field: 'goals', label: '⚽ Buts' },
+  { field: 'assists', label: '🎯 Passes D.' },
+];
+const OUTFIELD_TRIO = [
+  { field: 'shots', icon: <Target className="w-3 h-3" />, label: 'Tirs' },
+  { field: 'passes', icon: <ArrowRightLeft className="w-3 h-3" />, label: 'Passes' },
+  { field: 'tackles', icon: <Shield className="w-3 h-3" />, label: 'Tacles' },
+];
+const OUTFIELD_TRIO_2 = [
+  { field: 'offsides', label: 'Hors-jeu' },
+  { field: 'balls_recovered', label: 'Ballons réc.' },
+  { field: 'balls_lost', label: 'Ballons perdus' },
+];
+
+// Champs (steppers) pour gardiens
+const GK_COUNTERS = [
+  { field: 'shots_faced', label: '🥅 Tirs subis' },
+  { field: 'shots_on_target_faced', label: '🎯 Tirs cadrés' },
+  { field: 'saves', label: '🧤 Arrêts' },
+  { field: 'goals_conceded', label: '❌ Buts encaissés' },
+  { field: 'penalties_saved', label: '🛑 Pénos arrêtés' },
+  { field: 'penalty_goals_conceded', label: '⚠️ Buts encaissés (péno)' },
+];
 
 const MatchPlayerStats = ({ matchId }) => {
   const [players, setPlayers] = useState([]);
@@ -43,8 +82,17 @@ const MatchPlayerStats = ({ matchId }) => {
             shots: r.shots || 0,
             passes: r.passes || 0,
             tackles: r.tackles || 0,
-            yellowCard: r.yellowCards > 0,
-            redCard: r.redCards > 0,
+            offsides: r.offsides || 0,
+            balls_recovered: r.balls_recovered || 0,
+            balls_lost: r.balls_lost || 0,
+            pass_accuracy: r.pass_accuracy ?? '',
+            shot_accuracy: r.shot_accuracy ?? '',
+            shots_faced: r.shots_faced || 0,
+            shots_on_target_faced: r.shots_on_target_faced || 0,
+            saves: r.saves || 0,
+            goals_conceded: r.goals_conceded || 0,
+            penalties_saved: r.penalties_saved || 0,
+            penalty_goals_conceded: r.penalty_goals_conceded || 0,
             isMotm,
             notes: plainNotes
           };
@@ -62,10 +110,7 @@ const MatchPlayerStats = ({ matchId }) => {
   const handleStatChange = (playerId, field, value) => {
     setStatsMap(prev => ({
       ...prev,
-      [playerId]: {
-        ...(prev[playerId] || { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, rating: '', yellowCard: false, redCard: false, isMotm: false, notes: '' }),
-        [field]: value
-      }
+      [playerId]: { ...EMPTY_STAT, ...(prev[playerId] || {}), [field]: value }
     }));
   };
 
@@ -76,10 +121,7 @@ const MatchPlayerStats = ({ matchId }) => {
       setStatsMap(prev => {
         const newMap = { ...prev };
         if (checked) Object.keys(newMap).forEach(key => { if (newMap[key]) newMap[key] = { ...newMap[key], isMotm: false }; });
-        newMap[playerId] = {
-          ...(newMap[playerId] || { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, rating: '', yellowCard: false, redCard: false, isMotm: false, notes: '' }),
-          isMotm: checked
-        };
+        newMap[playerId] = { ...EMPTY_STAT, ...(newMap[playerId] || {}), isMotm: checked };
         return newMap;
       });
 
@@ -100,12 +142,7 @@ const MatchPlayerStats = ({ matchId }) => {
           promises.push(supabase.from('player_stats').update({ notes: notesToSave }).eq('id', currentStat.id));
         } else {
           const { data: newRecord, error } = await supabase.from('player_stats').insert({
-            matchId, playerId, notes: notesToSave,
-            goals: currentStat.goals || 0, assists: currentStat.assists || 0,
-            shots: currentStat.shots || 0, passes: currentStat.passes || 0,
-            tackles: currentStat.tackles || 0,
-            yellowCards: currentStat.yellowCard ? 1 : 0,
-            redCards: currentStat.redCard ? 1 : 0,
+            matchId, playerId, notes: notesToSave
           }).select().single();
           if (error) throw error;
           setStatsMap(prev => ({ ...prev, [playerId]: { ...prev[playerId], id: newRecord.id, isMotm: true } }));
@@ -130,26 +167,54 @@ const MatchPlayerStats = ({ matchId }) => {
     if (current > 0) handleStatChange(playerId, field, current - 1);
   };
 
+  const buildPayload = (player, stat) => {
+    const combinedNotes = ((stat.isMotm ? 'MOTM ' : '') + (stat.notes || '')).trim();
+    const isGk = player.position === GK_POSITION;
+    return {
+      matchId, playerId: player.id,
+      rating: stat.rating !== '' ? parseFloat(stat.rating) : null,
+      notes: combinedNotes,
+      // joueurs de champ
+      goals: isGk ? 0 : (stat.goals || 0),
+      assists: isGk ? 0 : (stat.assists || 0),
+      shots: isGk ? 0 : (stat.shots || 0),
+      passes: isGk ? 0 : (stat.passes || 0),
+      tackles: isGk ? 0 : (stat.tackles || 0),
+      offsides: isGk ? 0 : (stat.offsides || 0),
+      balls_recovered: isGk ? 0 : (stat.balls_recovered || 0),
+      balls_lost: isGk ? 0 : (stat.balls_lost || 0),
+      pass_accuracy: !isGk && stat.pass_accuracy !== '' ? parseInt(stat.pass_accuracy, 10) : null,
+      shot_accuracy: !isGk && stat.shot_accuracy !== '' ? parseInt(stat.shot_accuracy, 10) : null,
+      // gardiens
+      shots_faced: isGk ? (stat.shots_faced || 0) : 0,
+      shots_on_target_faced: isGk ? (stat.shots_on_target_faced || 0) : 0,
+      saves: isGk ? (stat.saves || 0) : 0,
+      goals_conceded: isGk ? (stat.goals_conceded || 0) : 0,
+      penalties_saved: isGk ? (stat.penalties_saved || 0) : 0,
+      penalty_goals_conceded: isGk ? (stat.penalty_goals_conceded || 0) : 0,
+    };
+  };
+
+  const hasAnyData = (stat, isGk) => {
+    if (stat.rating !== '' || stat.isMotm || stat.notes?.trim()) return true;
+    if (isGk) {
+      return stat.shots_faced > 0 || stat.shots_on_target_faced > 0 || stat.saves > 0 ||
+        stat.goals_conceded > 0 || stat.penalties_saved > 0 || stat.penalty_goals_conceded > 0;
+    }
+    return stat.goals > 0 || stat.assists > 0 || stat.shots > 0 || stat.passes > 0 || stat.tackles > 0 ||
+      stat.offsides > 0 || stat.balls_recovered > 0 || stat.balls_lost > 0 ||
+      stat.pass_accuracy !== '' || stat.shot_accuracy !== '';
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const promises = players.map(async (player) => {
-        const stat = statsMap[player.id] || {};
-        const hasData = stat.rating !== '' || stat.goals > 0 || stat.assists > 0 || stat.shots > 0 ||
-          stat.passes > 0 || stat.tackles > 0 || stat.yellowCard || stat.redCard || stat.notes?.trim() || stat.isMotm;
-        if (!hasData && !stat.id) return null;
+        const stat = { ...EMPTY_STAT, ...(statsMap[player.id] || {}) };
+        const isGk = player.position === GK_POSITION;
+        if (!hasAnyData(stat, isGk) && !stat.id) return null;
 
-        const combinedNotes = ((stat.isMotm ? 'MOTM ' : '') + (stat.notes || '')).trim();
-        const data = {
-          matchId, playerId: player.id,
-          rating: stat.rating !== '' ? parseFloat(stat.rating) : null,
-          goals: stat.goals || 0, assists: stat.assists || 0,
-          shots: stat.shots || 0, passes: stat.passes || 0,
-          tackles: stat.tackles || 0,
-          yellowCards: stat.yellowCard ? 1 : 0,
-          redCards: stat.redCard ? 1 : 0,
-          notes: combinedNotes
-        };
+        const data = buildPayload(player, stat);
 
         if (stat.id) {
           return supabase.from('player_stats').update(data).eq('id', stat.id);
@@ -180,8 +245,64 @@ const MatchPlayerStats = ({ matchId }) => {
     );
   }
 
+  // ── Sous-composants de saisie ─────────────────────────────────────────────
+  const Stepper = ({ playerId, field, size = 'md' }) => {
+    const small = size === 'sm';
+    return (
+      <div className="flex items-center justify-between">
+        <Button variant="outline" size="icon" className={small ? 'h-5 w-5 rounded-md' : 'h-6 w-6 rounded-lg'} onClick={() => decrementStat(playerId, field)}>
+          <Minus className={small ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+        </Button>
+        <span className={`font-bold text-center text-foreground ${small ? 'text-sm w-5' : 'text-base w-6'}`}>{statsMap[playerId]?.[field] ?? 0}</span>
+        <Button variant="outline" size="icon" className={small ? 'h-5 w-5 rounded-md' : 'h-6 w-6 rounded-lg'} onClick={() => incrementStat(playerId, field)}>
+          <Plus className={small ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
+        </Button>
+      </div>
+    );
+  };
+
+  const PlayerHeader = ({ player, stat, isGk }) => (
+    <CardHeader className="pb-3 border-b border-border/50 bg-muted/30">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${stat.isMotm ? 'bg-yellow-500 text-yellow-950' : isGk ? 'bg-emerald-600 text-white' : 'bg-primary text-primary-foreground'}`}>
+            {player.number}
+          </div>
+          <div>
+            <CardTitle className="text-base flex items-center gap-1.5">
+              {isGk && <Hand className="w-3.5 h-3.5 text-emerald-500" />}{player.name}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">{player.position}</p>
+          </div>
+        </div>
+        <label htmlFor={`motm-${player.id}`} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all border select-none ${stat.isMotm ? 'bg-yellow-500/10 border-yellow-500/50' : 'bg-muted/50 border-transparent hover:border-border hover:bg-muted'}`}>
+          <Checkbox id={`motm-${player.id}`} checked={stat.isMotm} onCheckedChange={(checked) => handleMotmChange(player.id, checked)} className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500 data-[state=checked]:text-yellow-950" />
+          <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${stat.isMotm ? 'text-yellow-600 dark:text-yellow-500' : 'text-muted-foreground'}`}>
+            <Trophy className={`w-3.5 h-3.5 ${stat.isMotm ? 'text-yellow-600 dark:text-yellow-500' : ''}`} /> MOTM
+          </span>
+        </label>
+      </div>
+    </CardHeader>
+  );
+
+  const RatingAndNotes = ({ player, stat }) => (
+    <>
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Note (0-10)</Label>
+        <Input type="number" min="0" max="10" step="0.1" value={stat.rating} onChange={(e) => handleStatChange(player.id, 'rating', e.target.value)} className="w-full text-center font-bold bg-background text-foreground" placeholder="-" />
+      </div>
+      <div className="space-y-1.5 pt-2 border-t border-border/50">
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes complémentaires</Label>
+        <Input value={stat.notes} onChange={(e) => handleStatChange(player.id, 'notes', e.target.value)} className="w-full bg-background text-foreground text-sm" placeholder="Blessure, remplacement..." />
+      </div>
+    </>
+  );
+
+  const gkPlayers = players.filter(p => p.position === GK_POSITION);
+  const outfieldPlayers = players.filter(p => p.position !== GK_POSITION);
+
   return (
-    <div className="mt-12 space-y-6 scroll-mt-24" id="match-stats-section">
+    <div className="mt-12 space-y-8 scroll-mt-24" id="match-stats-section">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">Statistiques de l'Effectif</h2>
@@ -193,87 +314,92 @@ const MatchPlayerStats = ({ matchId }) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {players.map(player => {
-          const stat = statsMap[player.id] || { goals: 0, assists: 0, shots: 0, passes: 0, tackles: 0, rating: '', yellowCard: false, redCard: false, isMotm: false, notes: '' };
-          return (
-            <Card key={player.id} className={`bg-card border-border overflow-hidden transition-all duration-200 ${stat.isMotm ? 'ring-2 ring-yellow-500 shadow-lg shadow-yellow-500/10' : 'hover:shadow-md'}`}>
-              <CardHeader className="pb-3 border-b border-border/50 bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${stat.isMotm ? 'bg-yellow-500 text-yellow-950' : 'bg-primary text-primary-foreground'}`}>
-                      {player.number}
+      {/* ── Gardiens ──────────────────────────────────────────────────────── */}
+      {gkPlayers.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500">
+            <Hand className="w-4 h-4" /> Gardiens de but
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {gkPlayers.map(player => {
+              const stat = { ...EMPTY_STAT, ...(statsMap[player.id] || {}) };
+              return (
+                <Card key={player.id} className={`bg-card overflow-hidden transition-all duration-200 ${stat.isMotm ? 'ring-2 ring-yellow-500 shadow-lg shadow-yellow-500/10' : 'border-emerald-500/30 hover:shadow-md'}`}>
+                  <PlayerHeader player={player} stat={stat} isGk />
+                  <CardContent className="p-4 space-y-4">
+                    <RatingAndNotes player={player} stat={stat} />
+                    <div className="grid grid-cols-2 gap-3">
+                      {GK_COUNTERS.map(({ field, label }) => (
+                        <div key={field} className="space-y-2 bg-background p-2.5 rounded-xl border border-border/50 shadow-sm">
+                          <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium mb-1 text-foreground text-center leading-tight">{label}</div>
+                          <Stepper playerId={player.id} field={field} />
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <CardTitle className="text-base">{player.name}</CardTitle>
-                      <p className="text-xs text-muted-foreground">{player.position}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Joueurs de champ ──────────────────────────────────────────────── */}
+      {outfieldPlayers.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
+            <Shield className="w-4 h-4" /> Joueurs de champ
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {outfieldPlayers.map(player => {
+              const stat = { ...EMPTY_STAT, ...(statsMap[player.id] || {}) };
+              return (
+                <Card key={player.id} className={`bg-card border-border overflow-hidden transition-all duration-200 ${stat.isMotm ? 'ring-2 ring-yellow-500 shadow-lg shadow-yellow-500/10' : 'hover:shadow-md'}`}>
+                  <PlayerHeader player={player} stat={stat} isGk={false} />
+                  <CardContent className="p-4 space-y-4">
+                    <RatingAndNotes player={player} stat={stat} />
+                    <div className="grid grid-cols-2 gap-3">
+                      {OUTFIELD_COUNTERS.map(({ field, label }) => (
+                        <div key={field} className="space-y-2 bg-background p-2.5 rounded-xl border border-border/50 shadow-sm">
+                          <div className="flex items-center justify-center gap-2 text-xs font-medium mb-1 text-foreground">{label}</div>
+                          <Stepper playerId={player.id} field={field} />
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor={`motm-${player.id}`} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all border select-none ${stat.isMotm ? 'bg-yellow-500/10 border-yellow-500/50' : 'bg-muted/50 border-transparent hover:border-border hover:bg-muted'}`}>
-                      <Checkbox id={`motm-${player.id}`} checked={stat.isMotm} onCheckedChange={(checked) => handleMotmChange(player.id, checked)} className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500 data-[state=checked]:text-yellow-950" />
-                      <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${stat.isMotm ? 'text-yellow-600 dark:text-yellow-500' : 'text-muted-foreground'}`}>
-                        <Trophy className={`w-3.5 h-3.5 ${stat.isMotm ? 'text-yellow-600 dark:text-yellow-500' : ''}`} /> MOTM
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Note (0-10)</Label>
-                  <Input type="number" min="0" max="10" step="0.1" value={stat.rating} onChange={(e) => handleStatChange(player.id, 'rating', e.target.value)} className="w-full text-center font-bold bg-background text-foreground" placeholder="-" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[{ field: 'goals', label: '⚽ Buts' }, { field: 'assists', label: '🎯 Passes D.' }].map(({ field, label }) => (
-                    <div key={field} className="space-y-2 bg-background p-2.5 rounded-xl border border-border/50 shadow-sm">
-                      <div className="flex items-center justify-center gap-2 text-xs font-medium mb-1 text-foreground">{label}</div>
-                      <div className="flex items-center justify-between">
-                        <Button variant="outline" size="icon" className="h-6 w-6 rounded-lg" onClick={() => decrementStat(player.id, field)}><Minus className="w-3 h-3" /></Button>
-                        <span className="font-bold text-base w-6 text-center text-foreground">{stat[field]}</span>
-                        <Button variant="outline" size="icon" className="h-6 w-6 rounded-lg" onClick={() => incrementStat(player.id, field)}><Plus className="w-3 h-3" /></Button>
-                      </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {OUTFIELD_TRIO.map(({ field, icon, label }) => (
+                        <div key={field} className="space-y-2 bg-background p-2 rounded-xl border border-border/50 shadow-sm">
+                          <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium mb-1 text-muted-foreground uppercase tracking-wider">{icon} {label}</div>
+                          <Stepper playerId={player.id} field={field} size="sm" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { field: 'shots', icon: <Target className="w-3 h-3" />, label: 'Tirs' },
-                    { field: 'passes', icon: <ArrowRightLeft className="w-3 h-3" />, label: 'Passes' },
-                    { field: 'tackles', icon: <Shield className="w-3 h-3" />, label: 'Tacles' }
-                  ].map(({ field, icon, label }) => (
-                    <div key={field} className="space-y-2 bg-background p-2 rounded-xl border border-border/50 shadow-sm">
-                      <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium mb-1 text-muted-foreground uppercase tracking-wider">{icon} {label}</div>
-                      <div className="flex items-center justify-between">
-                        <Button variant="outline" size="icon" className="h-5 w-5 rounded-md" onClick={() => decrementStat(player.id, field)}><Minus className="w-2.5 h-2.5" /></Button>
-                        <span className="font-bold text-sm w-5 text-center text-foreground">{stat[field]}</span>
-                        <Button variant="outline" size="icon" className="h-5 w-5 rounded-md" onClick={() => incrementStat(player.id, field)}><Plus className="w-2.5 h-2.5" /></Button>
-                      </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {OUTFIELD_TRIO_2.map(({ field, label }) => (
+                        <div key={field} className="space-y-2 bg-background p-2 rounded-xl border border-border/50 shadow-sm">
+                          <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium mb-1 text-muted-foreground uppercase tracking-wider text-center leading-tight">{label}</div>
+                          <Stepper playerId={player.id} field={field} size="sm" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-4 pt-1">
-                  {[
-                    { field: 'yellowCard', id: `yellow-${player.id}`, label: '🟨 Jaune', color: 'yellow' },
-                    { field: 'redCard', id: `red-${player.id}`, label: '🟥 Rouge', color: 'red' }
-                  ].map(({ field, id, label, color }) => (
-                    <div key={field} className="flex items-center justify-center">
-                      <label htmlFor={id} className="flex items-center gap-2 cursor-pointer w-full justify-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <Checkbox id={id} checked={stat[field]} onCheckedChange={(checked) => handleStatChange(player.id, field, checked)} className={`data-[state=checked]:bg-${color}-500 data-[state=checked]:border-${color}-500`} />
-                        <span className="text-sm font-medium flex items-center gap-1.5 text-foreground">{label}</span>
-                      </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { field: 'pass_accuracy', label: 'Préc. passes %' },
+                        { field: 'shot_accuracy', label: 'Préc. tirs %' },
+                      ].map(({ field, label }) => (
+                        <div key={field} className="space-y-1.5 bg-background p-2.5 rounded-xl border border-border/50 shadow-sm">
+                          <Label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-center block">{label}</Label>
+                          <Input type="number" min="0" max="100" value={stat[field]} onChange={(e) => handleStatChange(player.id, field, e.target.value)} className="w-full text-center font-bold bg-background text-foreground h-8" placeholder="-" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="space-y-1.5 pt-2 border-t border-border/50">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes complémentaires</Label>
-                  <Input value={stat.notes} onChange={(e) => handleStatChange(player.id, 'notes', e.target.value)} className="w-full bg-background text-foreground text-sm" placeholder="Blessure, remplacement..." />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
